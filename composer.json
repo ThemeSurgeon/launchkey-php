@@ -1,5 +1,5 @@
 {
-    "name": "launchkey-launchkey",
+    "name": "launchkey/launchkey",
     "description": "Official PHP library for LaunchKey Authentication",
     "version": "0.1.0",
     "type": "library",
