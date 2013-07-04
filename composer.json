@@ -1,7 +1,7 @@
 {
-    "name": "launchkey",
+    "name": "launchkey-launchkey",
     "description": "Official PHP library for LaunchKey Authentication",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "type": "library",
     "keywords": ["authenication", "launchkey", "security"],
     "homepage": "https://github.com/launchkey/launchkey-php",
@@ -15,8 +15,8 @@
     }
     ],
         "support": {
-            "issues": "https://github.com/launchkey/launchkey-php/issues",
-            "wiki": "https://github.com/launchkey/launchkey-php/wiki",
+            "issues": "https://launchkey.freshdesk.com/helpdesk",
+            "wiki": "https://launchkey.com/docs/api/overview",
             "source": "https://github.com/launchkey/launchkey-php"
         },
         "require": {
