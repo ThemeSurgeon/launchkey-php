@@ -209,11 +209,12 @@ class LaunchKey {
      * rsa_generate - return a public/private keypair 
      * 
      * @param int $bits 
-     * @access private
+     * @access public 
      * @return array 
      */
-    private function rsa_generate($bits=2040) {
+    public function rsa_generate($bits=2040) {
         $rsa = new Crypt_RSA();
+        define('CRYPT_RSA_EXPONENT', 65537);
         $keypair = $rsa->createKey($bits);
         return $keypair;
     } //end RSA_generate
@@ -223,10 +224,10 @@ class LaunchKey {
      * 
      * @param mixed $key 
      * @param mixed $package 
-     * @access private
+     * @access public 
      * @return string 
      */
-    private function rsa_decrypt($key, $package) {
+    public function rsa_decrypt($key, $package) {
         $rsa = new Crypt_RSA();
         $rsa->loadKey($key);
         $decrypted = $rsa->decrypt(base64_decode($package));
@@ -238,10 +239,10 @@ class LaunchKey {
      * 
      * @param mixed $key 
      * @param mixed $message 
-     * @access private
+     * @access public 
      * @return string 
      */
-    private function rsa_encrypt($key, $message) {
+    public function rsa_encrypt($key, $message) {
         $rsa = new Crypt_RSA();
         $rsa->loadKey($key);
         $encrypted = base64_encode($rsa->encrypt($message));
@@ -253,10 +254,10 @@ class LaunchKey {
      * 
      * @param mixed $key 
      * @param mixed $package 
-     * @access private
+     * @access public  
      * @return base64_encoded 
      */
-    private function rsa_sign($key, $package) {
+    public function rsa_sign($key, $package) {
         $rsa = new Crypt_RSA();
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
@@ -270,10 +271,10 @@ class LaunchKey {
      * 
      * @param mixed $key 
      * @param mixed $package 
-     * @access private
+     * @access public  
      * @return boolean 
      */
-    private function rsa_verify_sign($key, $signature, $package) {
+     public function rsa_verify_sign($key, $signature, $package) {
         $rsa = new Crypt_RSA();
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
