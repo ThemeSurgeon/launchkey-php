@@ -212,7 +212,7 @@ class LaunchKey {
      * @access public 
      * @return array 
      */
-    public function rsa_generate($bits=2040) {
+    public function rsa_generate($bits=2048) {
         $rsa = new Crypt_RSA();
         define('CRYPT_RSA_EXPONENT', 65537);
         $keypair = $rsa->createKey($bits);
