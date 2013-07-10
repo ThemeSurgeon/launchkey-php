@@ -262,8 +262,8 @@ class LaunchKey {
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
         $rsa->loadKey($key);
-        $signature = $rsa->sign(base64_decode($package));
-        return base64_encode($signature);
+        $signature = base64_encode($rsa->sign(base64_decode($package)));
+        return $signature;
     } //end rsa_sign
 
     /**
@@ -279,7 +279,8 @@ class LaunchKey {
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
         $rsa->loadKey($key);
-        return $rsa->verify(base64_decode($package), $signature);
+        $verify = $rsa->verify(base64_decode($package), $signature);
+        return $verify; 
     } //end rsa_verify_sign
 
 } //End LaunchKey
