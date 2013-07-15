@@ -1,7 +1,5 @@
 <?php
 
-require 'vendor/autoload.php';
-
 /**
  * LaunchKey 
  * 
@@ -10,7 +8,7 @@ require 'vendor/autoload.php';
  */
 class LaunchKey {
 
-    private $api_host ="https://api.launchkey.com";
+    private $api_host = "https://api.launchkey.com";
     private $api_public_key;
     private $app_key;
     private $app_secret;
@@ -42,9 +40,11 @@ class LaunchKey {
      * @access public
      * @return string 
      */
-    public function ping() { 
+    public function ping() {
         $response = $this->json_curl($this->api_host . "ping", "GET");
-        $this->ping_time = $response->launchkey_time;
+        $json_response = json_decode($response, true);
+        $this->ping_time = $json_response['launchkey_time'];
+        $this->api_public_key = $json_response['key'];
         return $response;
     } //End ping
 
@@ -56,12 +56,10 @@ class LaunchKey {
      */
     public function prepare_auth() { 
         if(empty($this->api_public_key)) {
-            $response = $this->json_curl($this->api_host . "ping", "GET");
-            $response = json_decode($response, 1);
-            $this->api_pub_key = $response['key'];
+            $this->ping();
         }
-        $to_encrypt = '{"secret": \'' . $this->app_secret . '\', "stamped": \'' . $response['launchkey_time'] . '\'}';
-        $encrypted_app_secret = $this->rsa_encrypt($this->api_pub_key, $to_encrypt);
+        $to_encrypt = '{"secret": \'' . $this->app_secret . '\', "stamped": \'' . $this->ping_time . '\'}';
+        $encrypted_app_secret = $this->rsa_encrypt($this->api_public_key, $to_encrypt);
         $signature = $this->rsa_sign($this->private_key, $encrypted_app_secret);
         $auth_array = array('app_key'=> $this->app_key, 
                             'secret_key' => $encrypted_app_secret,
@@ -142,7 +140,7 @@ class LaunchKey {
         $params['action'] = $action;
         $params['status'] = $status;
         $params['auth_request'] = $auth_request;
-        $response = $this->json_curl($this->api_host . "logs", "PUT", $params);
+        $this->json_curl($this->api_host . "logs", "PUT", $params);
         return True;
     } //End notify
 
@@ -154,9 +152,9 @@ class LaunchKey {
     * @return NULL 
     */
     public function deorbit($orbit, $signature) {
-        $ping = $this->ping();
-        if ($this->rsa_verify_sign($this->api_pub_key, $signature, $orbit)) {
-            $decoded = json_decode($orbit); 
+        $this->ping();
+        if ($this->rsa_verify_sign($this->api_public_key, $signature, $orbit)) {
+            $decoded = json_decode($orbit, true);
             $date_request = $decoded['launchkey_time']; 
             if (($this->ping_time - $date_request) > 300) {
                 return $decoded['user_hash'];
