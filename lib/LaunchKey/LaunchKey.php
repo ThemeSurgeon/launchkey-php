@@ -68,11 +68,12 @@ class LaunchKey {
     } //End prepare_auth
 
     /**
-     * authorize 
-     * 
-     * @param mixed $username 
+     * authorize
+     *
+     * @param mixed $username
+     * @throws Exception
      * @access public
-     * @return string 
+     * @return string
      */
     public function authorize($username) {
         $params = $this->prepare_auth();
@@ -166,7 +167,7 @@ class LaunchKey {
    /**
     * logout 
     * 
-    * @param string $username
+    * @param string $auth_request
     * @access public
     * @return boolean 
     */
