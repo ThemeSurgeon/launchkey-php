@@ -254,7 +254,7 @@ class LaunchKey {
      * @param mixed $key 
      * @param mixed $package 
      * @access public  
-     * @return base64_encoded 
+     * @return mixed
      */
     public function rsa_sign($key, $package) {
         $rsa = new Crypt_RSA();
@@ -266,12 +266,13 @@ class LaunchKey {
     } //end rsa_sign
 
     /**
-     * rsa_verify_sign - verify a signed message 
-     * 
-     * @param mixed $key 
-     * @param mixed $package 
-     * @access public  
-     * @return boolean 
+     * rsa_verify_sign - verify a signed message
+     *
+     * @param mixed $key
+     * @param $signature
+     * @param mixed $package
+     * @access public
+     * @return boolean
      */
      public function rsa_verify_sign($key, $signature, $package) {
         $rsa = new Crypt_RSA();
