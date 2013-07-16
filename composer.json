@@ -3,7 +3,7 @@
     "description": "Official PHP library for LaunchKey Authentication",
     "version": "0.1.0",
     "type": "library",
-    "keywords": ["authenication", "launchkey", "security"],
+    "keywords": ["authentication", "launchkey", "security"],
     "homepage": "https://github.com/launchkey/launchkey-php",
     "license": "MIT",
     "authors": [
