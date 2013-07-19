@@ -194,13 +194,14 @@ class LaunchKey {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, '6');
+        curl_setopt($ch, CURLOPT_TIMEOUT, '10');
 
         if($method != "GET") {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         }
 
         $result = curl_exec($ch);
+        curl_close($ch);
         return $result;
     } //End json_curl 
 
