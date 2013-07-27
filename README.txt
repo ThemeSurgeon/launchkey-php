@@ -19,6 +19,6 @@ Usage
 -------------------------
 
 Use composer to download the necessary libraries and follow the documentation
-for PHP located here: https://launchkey.com/docs/api/overview#php
+for PHP located here: https://launchkey.com/docs/api/authentication-flow/php 
 
 #########################
