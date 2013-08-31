@@ -58,7 +58,8 @@ class LaunchKey {
         if(empty($this->api_public_key)) {
             $this->ping();
         }
-        $to_encrypt = '{"secret": \'' . $this->app_secret . '\', "stamped": \'' . $this->ping_time . '\'}';
+        $data = array('secret' => $this->app_secret, 'stamped' => $this->ping_time);
+        $to_encrypt = json_encode($data);
         $encrypted_app_secret = $this->rsa_encrypt($this->api_public_key, $to_encrypt);
         $signature = $this->rsa_sign($this->private_key, $encrypted_app_secret);
         $auth_array = array('app_key'=> $this->app_key,
