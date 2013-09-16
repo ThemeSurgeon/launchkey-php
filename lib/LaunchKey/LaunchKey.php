@@ -6,7 +6,8 @@
  * @author LaunchKey <developers@launchkey.com>
  * @package LaunchKey
  */
-class LaunchKey {
+class LaunchKey
+{
 
     private $api_host = "https://api.launchkey.com";
     private $api_public_key;
@@ -15,6 +16,7 @@ class LaunchKey {
     private $private_key;
     private $domain;
     private $ping_time;
+    private $ping_difference;
 
     /**
      * __construct
@@ -26,13 +28,14 @@ class LaunchKey {
      * @param string $version
      * @access protected
      */
-    function __construct($app_key, $app_secret, $private_key, $domain, $version="v1") {
+    function __construct($app_key, $app_secret, $private_key, $domain, $version = "v1")
+    {
         $this->app_key = $app_key;
         $this->app_secret = $app_secret;
         $this->private_key = $private_key;
         $this->domain = $domain;
         $this->api_host = $this->api_host . "/" . $version . "/";
-    }
+    } //end __construct
 
     /**
      * ping
@@ -40,13 +43,18 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function ping() {
-        $response = $this->json_curl($this->api_host . "ping", "GET");
-        $json_response = json_decode($response, true);
-        $this->ping_time = $json_response['launchkey_time'];
-        $this->api_public_key = $json_response['key'];
-        return $response;
-    } //End ping
+    public function ping()
+    {
+        if (empty($this->ping_time)) {
+            $response = $this->json_curl($this->api_host . "ping", "GET");
+            $json_response = json_decode($response, true);
+            $this->api_public_key = $json_response['key'];
+            $this->ping_time = $json_response['launchkey_time'];
+            $this->ping_difference = time();
+        } else {
+            $this->ping_time = (time() - $this->ping_difference) + $this->ping_time;
+        }
+    } //end ping
 
     /**
      * prepare_auth
@@ -54,19 +62,20 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function prepare_auth() {
-        if(empty($this->api_public_key)) {
+    public function prepare_auth()
+    {
+        if (empty($this->api_public_key)) {
             $this->ping();
         }
         $data = array('secret' => $this->app_secret, 'stamped' => $this->ping_time);
         $to_encrypt = json_encode($data);
         $encrypted_app_secret = $this->rsa_encrypt($this->api_public_key, $to_encrypt);
         $signature = $this->rsa_sign($this->private_key, $encrypted_app_secret);
-        $auth_array = array('app_key'=> $this->app_key,
+        $auth_array = array('app_key' => $this->app_key,
             'secret_key' => $encrypted_app_secret,
             'signature' => $signature);
         return $auth_array;
-    } //End prepare_auth
+    } //end prepare_auth
 
     /**
      * authorize
@@ -76,9 +85,11 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function authorize($username) {
+    public function authorize($username, $session = TRUE)
+    {
         $params = $this->prepare_auth();
-        $params['username']  = $username;
+        $params['username'] = $username;
+        $params['session'] = $session;
         $response = $this->json_curl($this->api_host . "auths", "POST", $params);
         $response = json_decode($response, true);
 
@@ -86,7 +97,7 @@ class LaunchKey {
             throw new Exception('Error code returned: ' . $response['status_code']);
         }
         return $response['auth_request'];
-    } //End authorize
+    } //end authorize
 
     /**
      * poll_request
@@ -95,13 +106,13 @@ class LaunchKey {
      * @access public
      * @return array
      */
-    public function poll_request($auth_request) {
+    public function poll_request($auth_request)
+    {
         $params = $this->prepare_auth();
-        $params['app_key'] = $this->app_key;
         $params['auth_request'] = $auth_request;
         $response = $this->json_curl($this->api_host . "poll", "GET", $params);
         return json_decode($response, true);
-    } //End poll_request
+    } //end poll_request
 
     /**
      * is_authorized
@@ -110,7 +121,8 @@ class LaunchKey {
      * @access public
      * @return boolean
      */
-    public function is_authorized($package) {
+    public function is_authorized($package)
+    {
         $auth_response = json_decode($this->rsa_decrypt($this->private_key, $package), true);
 
         if (!isset($auth_response['response']) || strtolower($auth_response['response']) == "false") {
@@ -122,7 +134,7 @@ class LaunchKey {
             return True;
         }
         return False;
-    } // End is_authorized
+    } // end is_authorized
 
     /**
      * notify
@@ -134,9 +146,10 @@ class LaunchKey {
      * @access public
      * @return boolean
      */
-    public function notify($action, $status, $auth_request="", $username="") {
+    public function notify($action, $status, $auth_request = "", $username = "")
+    {
         $params = $this->prepare_auth();
-        if($username != "" ) {
+        if ($username != "") {
             $params['username'] = $username;
         }
         $params['action'] = $action;
@@ -144,7 +157,7 @@ class LaunchKey {
         $params['auth_request'] = $auth_request;
         $this->json_curl($this->api_host . "logs", "PUT", $params);
         return True;
-    } //End notify
+    } //end notify
 
     /**
      * deorbit
@@ -153,7 +166,8 @@ class LaunchKey {
      * @param string $signature
      * @return NULL
      */
-    public function deorbit($orbit, $signature) {
+    public function deorbit($orbit, $signature)
+    {
         $this->ping();
         if ($this->rsa_verify_sign($this->api_public_key, $signature, $orbit)) {
             $decoded = json_decode($orbit, true);
@@ -172,10 +186,11 @@ class LaunchKey {
      * @access public
      * @return boolean
      */
-    public function logout($auth_request) {
+    public function logout($auth_request)
+    {
         $this->notify("Revoke", "True", $auth_request);
         return True;
-    } //End logout
+    } //end logout
 
     /**
      * json_curl
@@ -186,10 +201,11 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function json_curl($url, $method="GET", $params = array()) {
-        if($method == "GET" && count($params)) {
+    public function json_curl($url, $method = "GET", $params = array())
+    {
+        if ($method == "GET" && count($params)) {
             $query_params = http_build_query($params);
-            $url = $url . "/?" .  $query_params;
+            $url = $url . "/?" . $query_params;
         }
 
         $ch = curl_init($url);
@@ -197,14 +213,14 @@ class LaunchKey {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, '10');
 
-        if($method != "GET") {
+        if ($method != "GET") {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         }
 
         $result = curl_exec($ch);
         curl_close($ch);
         return $result;
-    } //End json_curl 
+    } //end json_curl
 
     /**
      * rsa_generate - return a public/private keypair
@@ -213,7 +229,8 @@ class LaunchKey {
      * @access public
      * @return array
      */
-    public function rsa_generate($bits=2048) {
+    public function rsa_generate($bits = 2048)
+    {
         $rsa = new Crypt_RSA();
         define('CRYPT_RSA_EXPONENT', 65537);
         $keypair = $rsa->createKey($bits);
@@ -228,7 +245,8 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function rsa_decrypt($key, $package) {
+    public function rsa_decrypt($key, $package)
+    {
         $rsa = new Crypt_RSA();
         $rsa->loadKey($key);
         $decrypted = $rsa->decrypt(base64_decode($package));
@@ -243,7 +261,8 @@ class LaunchKey {
      * @access public
      * @return string
      */
-    public function rsa_encrypt($key, $message) {
+    public function rsa_encrypt($key, $message)
+    {
         $rsa = new Crypt_RSA();
         $rsa->loadKey($key);
         $encrypted = base64_encode($rsa->encrypt($message));
@@ -258,7 +277,8 @@ class LaunchKey {
      * @access public
      * @return mixed
      */
-    public function rsa_sign($key, $package) {
+    public function rsa_sign($key, $package)
+    {
         $rsa = new Crypt_RSA();
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
@@ -276,7 +296,8 @@ class LaunchKey {
      * @access public
      * @return boolean
      */
-    public function rsa_verify_sign($key, $signature, $package) {
+    public function rsa_verify_sign($key, $signature, $package)
+    {
         $rsa = new Crypt_RSA();
         $rsa->setHash("sha256");
         $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
