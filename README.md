@@ -1,4 +1,4 @@
-# LaunchKey
+# LaunchKey PHP SDK
 
 ## Description
 
@@ -38,7 +38,7 @@ and
 
 ### To figure out whether the user authorized or denied the request
 
-    if ($launchkey->is_authorized($auth_request, $launch_status['auth']))
+    if ($launchkey->is_authorized($launch_status['auth'], $auth_request))
         #Log the user in
 
 
@@ -46,6 +46,9 @@ and
 
     $launchkey->logout($auth_request);
 
+### Handling a deorbit callback (https://launchkey.com/docs/api/authentication-flow/php#deorbit-callback)
+
+    $launchkey->deorbit($deorbit, $signature);
 
 More Documentation: https://launchkey.com/docs/api/authentication-flow/php#user-authentication
 

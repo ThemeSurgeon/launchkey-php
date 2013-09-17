@@ -3,6 +3,8 @@
 /**
  * LaunchKey
  *
+ * API SDK that can be used to authorize users, check existing auth requests, and notify LaunchKey for logging.
+ *
  * @author LaunchKey <developers@launchkey.com>
  * @package LaunchKey
  */
@@ -38,7 +40,7 @@ class LaunchKey
     } //end __construct
 
     /**
-     * ping
+     * ping - used to retrieve the API's public key and server time
      *
      * @access public
      * @return string
@@ -57,7 +59,7 @@ class LaunchKey
     } //end ping
 
     /**
-     * prepare_auth
+     * prepare_auth - encrypts app_secret with RSA key and signs
      *
      * @access public
      * @return string
@@ -78,7 +80,7 @@ class LaunchKey
     } //end prepare_auth
 
     /**
-     * authorize
+     * authorize - used to send an authorization request for a specific username
      *
      * @param mixed $username
      * @throws Exception
@@ -100,7 +102,7 @@ class LaunchKey
     } //end authorize
 
     /**
-     * poll_request
+     * poll_request - poll the API to find the status of an authorization request
      *
      * @param mixed $auth_request
      * @access public
@@ -115,29 +117,38 @@ class LaunchKey
     } //end poll_request
 
     /**
-     * is_authorized
+     * is_authorized - returns boolean value based on whether user has denied or accepted the authorization
+     * request and it has passed all security checks
      *
      * @param mixed $package
      * @access public
      * @return boolean
      */
-    public function is_authorized($package)
+    public function is_authorized($package, $auth_request='')
     {
         $auth_response = json_decode($this->rsa_decrypt($this->private_key, $package), true);
 
-        if (!isset($auth_response['response']) || strtolower($auth_response['response']) == "false") {
-            $this->notify("Authenticate", "False");
-            return False;
+        if (!isset($auth_response['response']) || !isset($auth_response['auth_request']) || $auth_response['auth_request'] != $auth_request ) {
+            return $this->notify("Authenticate", "False");
         }
-        if (strtolower($auth_response['response']) == "true") {
-            $this->notify("Authenticate", "True", $auth_response['auth_request']);
-            return True;
+
+        $pins_valid = False;
+        try {
+           $pins_valid = $this->pins_valid($auth_response['app_pins'], $auth_response['device_id']);
+        } catch (Exception $e) {
+           $pins_valid = True;
         }
+
+        if($pins_valid) {
+            $response = strtolower($auth_response['response']) === 'true' ? 'True':'False';
+            return $this->notify("Authenticate", $response, $auth_response['auth_request']);
+        }
+
         return False;
     } // end is_authorized
 
     /**
-     * notify
+     * notify - notifies LaunchKey as to whether the user was logged in/out
      *
      * @param string $action
      * @param boolean $status
@@ -155,12 +166,19 @@ class LaunchKey
         $params['action'] = $action;
         $params['status'] = $status;
         $params['auth_request'] = $auth_request;
-        $this->json_curl($this->api_host . "logs", "PUT", $params);
-        return True;
+        $response = json_decode($this->json_curl($this->api_host . "logs", "PUT", $params), True);
+
+        if(isset($response['message']) && $response['message'] == "Successfully updated") {
+            $status_boolean = strtolower($status) === 'true' ? True:False;
+            return $status_boolean;
+        }
+
+        return False;
     } //end notify
 
     /**
-     * deorbit
+     * deorbit - verify the deorbit request by signature and timestamp, return the user_hash needed to identify the
+     * user and log them out
      *
      * @param string $orbit
      * @param string $signature
@@ -180,7 +198,7 @@ class LaunchKey
     } //end deorbit
 
     /**
-     * logout
+     * logout - notifies API that the session end has been confirmed
      *
      * @param string $auth_request
      * @access public
@@ -188,9 +206,66 @@ class LaunchKey
      */
     public function logout($auth_request)
     {
-        $this->notify("Revoke", "True", $auth_request);
-        return True;
+        return $this->notify("Revoke", "True", $auth_request);
     } //end logout
+
+    /**
+     * pins_valid - return boolean for whether the tokens pass or not
+     *
+     * @param $app_pins
+     * @param $device
+     * @return boolean
+     */
+    public function pins_valid($app_pins, $device)
+    {
+        throw new Exception('Not implemented. Subclass must implement.');
+        $user = $this->get_user_hash();
+        $pins = $this->get_existing_pins($user, $device);
+        $update = False;
+
+        if(substr_count($app_pins, ',') == 0 && trim($pins) == "") {
+            $update = True;
+        } elseif (substr_count($app_pins, ',') > 0) {
+            $update = True;
+        }
+
+        if($update) {
+            $this->update_pins($user, $device, $app_pins);
+        }
+    } //end pins_valid
+
+    /**
+     * get_user_hash - get the user hash for this request
+     *
+     */
+    public function get_user_hash()
+    {
+        throw new Exception('Not implemented. Subclass must implement.');
+
+    } //end get_user_hash
+
+    /**
+     * get_existing_pins - get string of all PINs comma delimited that exist for the user already from persistent store
+     *
+     * @param $user
+     * @param $device
+     */
+    public function get_existing_pins($user, $device)
+    {
+        throw new Exception('Not implemented. Subclass must implement.');
+    } //end get_existing_pins
+
+    /**
+     * update_pins - Update the persistent store with the latest PINs
+     *
+     * @param $user
+     * @param $device
+     * @param $pins
+     */
+    public function update_pins($user, $device, $pins)
+    {
+        throw new Exception('Not implemented. Subclass must implement.');
+    } //end update_pins
 
     /**
      * json_curl
