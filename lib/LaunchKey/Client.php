@@ -8,9 +8,8 @@
  * @author LaunchKey <developers@launchkey.com>
  * @package LaunchKey
  */
-class LaunchKey
+class LaunchKey_Client
 {
-
     private $api_host = "https://api.launchkey.com";
     private $api_public_key;
     private $app_key;
@@ -30,7 +29,7 @@ class LaunchKey
      * @param string $version
      * @access protected
      */
-    function __construct($app_key, $app_secret, $private_key, $domain, $version = "v1")
+    public function __construct($app_key, $app_secret, $private_key, $domain, $version = "v1")
     {
         $this->app_key = $app_key;
         $this->app_secret = $app_secret;

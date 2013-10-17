@@ -16,13 +16,12 @@ and
 
 ### To create a LaunchKey API object
 
-    include("LaunchKey.php");
+    include("LaunchKey/Client.php"); // can be excluded if using an autoloader w/ Composer
     $app_key = 1234567890; //log in to https://dashboard.launchkey.com to get keys
     $secret_key = "SECRET_KEY";
     $private_key = file_get_contents("/path/to/private.key");
     $domain = "yourdomain.tld";
-    $launchkey = new LaunchKey($app_key, $secret_key, $private_key, $domain);
-
+    $launchkey = new LaunchKey_Client($app_key, $secret_key, $private_key, $domain);
 
 ### When a user wishes to login
 
