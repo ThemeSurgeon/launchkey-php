@@ -47,6 +47,16 @@ class Config extends \ArrayObject {
         return $this->offsetSet($option, $value);
     }
 
+    public function __isset($option)
+    {
+        return $this->offsetExists($option);
+    }
+
+    public function __unset($option)
+    {
+        return $this->offsetUnset($option);
+    }
+
     public function offsetGet($option)
     {
         $this->assert_valid_option($option);
