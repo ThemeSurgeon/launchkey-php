@@ -69,7 +69,16 @@ class Client {
 
     public function default_adapter()
     {
-        $adapter = new Guzzle($this->endpoint());
+        $options = array(
+            'timeout'                   => $this->client['http_read_timeout'],
+            'connect_timeout'           => $this->client['http_open_timeout'],
+            'ssl.certificate_authority' => $this->client['certificate_authority'],
+        );
+
+        $adapter = new Guzzle($this->endpoint(), array(), $options);
+
+        $adapter->setUserAgent($this->user_agent());
+
         $adapter->addSubscriber(
             new SignedRequestPlugin($this->client)
         );

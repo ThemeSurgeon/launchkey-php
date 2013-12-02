@@ -220,7 +220,7 @@ namespace LaunchKey\Tests\Http {
             self::$mock_php_uname  = $php_uname;
             self::$mock_phpversion = $phpversion;
 
-            $client = new Client(NULL, NULL);
+            $client = new Client(NULL, FALSE);
             $this->assertEquals($expected, $client->user_agent());
         }
 
@@ -251,7 +251,7 @@ namespace LaunchKey\Tests\Http {
          */
         public function test_endpoint($config, $expected)
         {
-            $client = new Client($config);
+            $client = new Client($config, FALSE);
             $this->assertEquals($expected, $client->endpoint());
         }
 
