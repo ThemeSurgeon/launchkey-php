@@ -8,8 +8,13 @@ class ApiException extends LaunchKeyException {
     {
         $response = $guzzle_exception->getResponse();
         $body     = $response->json();
-        $message  = $body['message'];
+        $message  = isset($body['message']) ? $body['message'] : 'Unknown error';
         $code     = (integer) $body['message_code'];
+
+        if ( ! (is_string($message)))
+        {
+            $message = json_encode($message);
+        }
 
         parent::__construct(
             '[:code] :message (Status :status)', array(
@@ -17,8 +22,7 @@ class ApiException extends LaunchKeyException {
                 ':message' => $message,
                 ':status'  => $response->getStatusCode(),
             ),
-            $code,
-            $guzzle_exception
+            $code
         );
     }
 
