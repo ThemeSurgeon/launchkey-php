@@ -2,6 +2,7 @@
 
 namespace LaunchKey;
 
+use LaunchKey\Exception\LaunchKeyException;
 use LaunchKey\Exception\ApiException;
 use LaunchKey\Exception\NotImplementedException;
 use LaunchKey\Http\Client as HttpClient;
@@ -36,9 +37,17 @@ class Client implements \ArrayAccess {
         {
             $this->config = LaunchKey::$config;
         }
-        else
+        elseif ($config instanceof Config)
         {
             $this->config = clone $config;
+        }
+        elseif (is_array($config) OR ($config instanceof \Traversable))
+        {
+            $this->config = new Config($config);
+        }
+        else
+        {
+            throw new LaunchKeyException('Unknown configuration supplied');
         }
 
         $this->http_client = new HttpClient($this);
