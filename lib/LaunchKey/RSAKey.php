@@ -31,6 +31,10 @@ class RSAKey {
 
     private $private_key;
 
+    private $signer;
+
+    private $verifier;
+
     public function __construct($key, array $options = array())
     {
         $key = (string) $key;
@@ -61,6 +65,28 @@ class RSAKey {
         return $this;
     }
 
+    public function signer($value = NULL)
+    {
+        if ($value === NULL)
+        {
+            return $this->signer;
+        }
+
+        $this->signer = $value;
+        return $this;
+    }
+
+    public function verifier($value = NULl)
+    {
+        if ($value === NULL)
+        {
+            return $this->verifier;
+        }
+
+        $this->verifier = $value;
+        return $this;
+    }
+
     public function public_encrypt($data)
     {
         return base64_encode($this->public_key->encrypt($data));
@@ -73,12 +99,12 @@ class RSAKey {
 
     public function sign($data)
     {
-        return base64_encode($this->private_key->sign(base64_decode($data)));
+        return base64_encode($this->signer->sign(base64_decode($data)));
     }
 
     public function verify($signature, $data)
     {
-        return $this->public_key->verify(base64_decode($data), base64_decode($signature));
+        return $this->verifier->verify(base64_decode($data), base64_decode($signature));
     }
 
     private function load_public_key($key)
@@ -92,9 +118,12 @@ class RSAKey {
         }
 
         $this->public_key = new self::$crypt_class;
-        $this->public_key->setHash('sha256');
-        $this->public_key->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
         $this->public_key->loadKey($public);
+
+        $this->verifier = new self::$crypt_class;
+        $this->verifier->setHash('sha256');
+        $this->verifier->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
+        $this->verifier->loadKey($public);
     }
 
     private function load_private_key($key, array $options = array())
@@ -108,11 +137,14 @@ class RSAKey {
         }
 
         $this->private_key = new self::$crypt_class;
-        $this->private_key->setHash('sha256');
-        $this->private_key->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
         $this->private_key->loadKey($private);
 
-        if (isset($options['passphrase']))
+        $this->signer = new self::$crypt_class;
+        $this->signer->setHash('sha256');
+        $this->signer->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
+        $this->signer->loadKey($private);
+
+        if (isset($options['passphrase']) AND ! empty($options['passphrase']))
         {
             $this->private_key->setPassword($options['passphrase']);
         }

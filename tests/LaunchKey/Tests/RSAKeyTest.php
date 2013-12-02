@@ -60,7 +60,7 @@ class RSAKeyTest extends \PHPUnit_Framework_TestCase {
              ->andReturn($signature);
 
         $keypair = new RSAKey(NULL);
-        $keypair->private_key($mock);
+        $keypair->signer($mock);
 
         $this->assertEquals($encoded_signature, $keypair->sign($encoded_data));
     }
@@ -79,7 +79,7 @@ class RSAKeyTest extends \PHPUnit_Framework_TestCase {
              ->andReturn($expected);
 
         $keypair = new RSAKey(NULL);
-        $keypair->public_key($mock);
+        $keypair->verifier($mock);
 
         $this->assertEquals($expected, $keypair->verify($encoded_signature, $encoded_data));
     }
