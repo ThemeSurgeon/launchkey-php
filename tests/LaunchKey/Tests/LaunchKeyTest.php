@@ -3,6 +3,7 @@
 namespace LaunchKey\Tests;
 
 use LaunchKey\LaunchKey;
+use Mockery;
 
 /**
  * Tests LaunchKey
@@ -17,7 +18,7 @@ class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
         parent::setUp();
 
         $this->original_config = LaunchKey::$config;
-        $this->original_client = LaunchKey::$_client;
+        $this->original_client = LaunchKey::$client;
     }
 
     protected function tearDown()
@@ -25,7 +26,7 @@ class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
         parent::tearDown();
 
         LaunchKey::$config = $this->original_config;
-        LaunchKey::$_client = $this->original_client;
+        LaunchKey::$client = $this->original_client;
     }
 
     public function test_configure_sets_supplied_options()
@@ -34,7 +35,6 @@ class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
             'domain'                    => 'example.com',
             'app_key'                   => 'abcdefghijklmnopqrstuvwxyz',
             'secret_key'                => 's3cr3t!',
-            'keypair'                   => '...',
             'passphrase'                => 'supersecret',
             'host'                      => 'launchkey.example.com',
             'use_system_ssl_cert_chain' => TRUE,
@@ -53,15 +53,20 @@ class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
     public function test_configure_instantiates_a_new_client()
     {
         LaunchKey::configure();
-        $last_client = spl_object_hash(LaunchKey::$_client);
+        $last_client = spl_object_hash(LaunchKey::$client);
         LaunchKey::configure();
 
-        $this->assertNotEquals($last_client, spl_object_hash(LaunchKey::$_client));
+        $this->assertNotEquals($last_client, spl_object_hash(LaunchKey::$client));
     }
 
     public function test_missing_static_methods_are_delegated_to_client()
     {
-        $this->markTestIncomplete();
+        LaunchKey::$client = Mockery::mock('LaunchKey\\LaunchKey');
+        LaunchKey::$client->shouldReceive('authorize')
+            ->with('bob_bobson')
+            ->andReturn('foo');
+
+        $this->assertEquals('foo', LaunchKey::authorize('bob_bobson'));
     }
 
 } // End LaunchKeyTest
