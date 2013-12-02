@@ -31,6 +31,12 @@ class Config extends \ArrayObject {
         'use_system_ssl_cert_chain' => FALSE,
     );
 
+    private $_api_public_key = NULL;
+
+    private $_keypair = NULL;
+
+    private $_raw_keypair;
+
     public function __construct($options = array(), $flags = 0, $iterator_class = 'ArrayIterator')
     {
         parent::__construct(array(), $flags, $iterator_class);
@@ -58,7 +64,17 @@ class Config extends \ArrayObject {
         }
     }
 
-    private $_api_public_key = NULL;
+    public function certificate_authority()
+    {
+        if ($this['use_system_ssl_cert_chain'])
+        {
+            return 'system';
+        }
+        else
+        {
+            return realpath(__DIR__.'/../../resources/ca-bundle.crt');
+        }
+    }
 
     public function api_public_key($value = NULL)
     {
@@ -69,10 +85,6 @@ class Config extends \ArrayObject {
 
         return $this->_api_public_key = new RSAKey($value);
     }
-
-    private $_keypair = NULL;
-
-    private $_raw_keypair;
 
     public function keypair($value = NULL)
     {

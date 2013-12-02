@@ -106,4 +106,18 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($error instanceof \LaunchKey\Exception\LaunchKeyException);
      }
 
+    public function test_certificate_authority()
+    {
+        $config = new Config;
+
+        $this->assertEquals(
+            realpath(__DIR__.'/../../../resources/ca-bundle.crt'),
+            $config['certificate_authority']
+        );
+
+        $config['use_system_ssl_cert_chain'] = TRUE;
+
+        $this->assertEquals('system', $config['certificate_authority']);
+    }
+
 } // End ConfigTest
