@@ -2,8 +2,10 @@
 
 namespace LaunchKey\Http;
 
-use LaunchKey\LaunchKey;
 use Guzzle\Http\Client as Guzzle;
+use Guzzle\Http\Exception\RequestException;
+use LaunchKey\Exception\ApiException;
+use LaunchKey\LaunchKey;
 
 class Client {
 
@@ -33,7 +35,14 @@ class Client {
             $query->set($param, $value);
         }
 
-        return $request->send()->json();
+        try
+        {
+            return $request->send()->json();
+        }
+        catch (RequestException $e)
+        {
+            throw new ApiException($e);
+        }
     }
 
     public function post($path = NULL, $body = NULL, $headers = array())
@@ -41,7 +50,14 @@ class Client {
         $request = $this->adapter->post($path, $headers);
         $request->addPostFields($body);
 
-        return $request->send()->json();
+        try
+        {
+            return $request->send()->json();
+        }
+        catch (RequestException $e)
+        {
+            throw new ApiException($e);
+        }
     }
 
     public function put($path = NULL, $body = NULL, $headers = array())
@@ -49,7 +65,14 @@ class Client {
         $request = $this->adapter->put($path, $headers);
         $request->addPostFields($body);
 
-        return $request->send()->json();
+        try
+        {
+            return $request->send()->json();
+        }
+        catch (RequestException $e)
+        {
+            throw new ApiException($e);
+        }
     }
 
     public function user_agent()
@@ -82,6 +105,8 @@ class Client {
         $adapter->addSubscriber(
             new SignedRequestPlugin($this->client)
         );
+
+        return $adapter;
     }
 
 } // End Client
