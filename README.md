@@ -34,7 +34,7 @@ LaunchKey::configure(array(
 ));
 ```
 
-Or by instantiating a new `Client`:
+Or by instantiating a new `LaunchKey\Client`:
 
 ```php
 $launchkey = new LaunchKey\Client(array(
@@ -66,7 +66,7 @@ LaunchKey::authorize($username, FALSE);
 
 Check whether the user has responded to the authorization request:
 
-```
+```php
 // The user has not responded:
 $launch_status = LaunchKey::poll($auth_request);
 // =>  FALSE
