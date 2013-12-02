@@ -13,7 +13,7 @@ use LaunchKey\Config;
 class ConfigTest extends \PHPUnit_Framework_TestCase {
 
     private static $options = array(
-        'domain', 'app_key', 'secret_key', 'keypair', 'passphrase', 'host',
+        'domain', 'app_key', 'secret_key', 'passphrase', 'host',
         'use_system_ssl_cert_chain', 'http_open_timeout', 'http_read_timeout',
     );
 
@@ -33,7 +33,6 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
             'domain'                    => 'example.com',
             'app_key'                   => 'abcdefghijklmnopqrstuvwxyz',
             'secret_key'                => 's3cr3t!',
-            'keypair'                   => '...',
             'passphrase'                => 'supersecret',
             'host'                      => 'launchkey.example.com',
             'use_system_ssl_cert_chain' => TRUE,
