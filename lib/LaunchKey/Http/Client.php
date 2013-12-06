@@ -7,6 +7,9 @@ use Guzzle\Http\Exception\RequestException;
 use LaunchKey\Exception\ApiException;
 use LaunchKey\LaunchKey;
 
+/**
+ * @internal
+ */
 class Client {
 
     private $client;

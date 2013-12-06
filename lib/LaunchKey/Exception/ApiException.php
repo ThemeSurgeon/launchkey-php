@@ -2,6 +2,9 @@
 
 namespace LaunchKey\Exception;
 
+/**
+ * Thrown when an API error occurs.
+ */
 class ApiException extends LaunchKeyException {
 
     public function __construct($guzzle_exception)

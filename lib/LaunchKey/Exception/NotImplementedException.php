@@ -2,6 +2,9 @@
 
 namespace LaunchKey\Exception;
 
+/**
+ * Thrown when a called method has not been implemented.
+ */
 class NotImplementedException extends LaunchKeyException {
 
     public function __construct($class, $method)

@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+gem 'rake'
+gem 'launchy'
+
 # Guard
 gem 'guard'
 gem 'guard-bundler'

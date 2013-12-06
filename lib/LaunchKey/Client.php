@@ -12,8 +12,8 @@ use LaunchKey\Http\Client as HttpClient;
  *
  * API SDK that can be used to authorize users, check existing auth requests, and notify LaunchKey for logging.
  *
- * @author LaunchKey <developers@launchkey.com>
- * @package LaunchKey
+ * @author   LaunchKey  <developers@launchkey.com>
+ * @package  LaunchKey
  */
 class Client implements \ArrayAccess {
 
@@ -27,7 +27,7 @@ class Client implements \ArrayAccess {
 
     /**
      * Instantiates a new `Client` with optionally supplied `$config`. If no
-     * `$config` is supplied, `LaunchKey::$config` is used.
+     * `$config` is supplied, {@link LaunchKey::$config} is used.
      *
      * @param  array|Config  $config  The configuration to use.
      */
@@ -377,6 +377,9 @@ class Client implements \ArrayAccess {
         return (time() - 5 * 60 > $this->pinged_at);
     }
 
+    /**
+     * @internal
+     */
     protected function is_valid_auth($auth, $auth_request = NULL)
     {
         if ($auth_request === NULL)
@@ -401,11 +404,17 @@ class Client implements \ArrayAccess {
             $auth['auth_request'] == $auth_request);
     }
 
+    /**
+     * @internal
+     */
     protected function load_auth($crypted_auth)
     {
         return json_decode($this->decrypt_auth($crypted_auth), TRUE);
     }
 
+    /**
+     * @internal
+     */
     protected function decrypt_auth($crypted_auth)
     {
         return $this['keypair']->private_decrypt($crypted_auth);

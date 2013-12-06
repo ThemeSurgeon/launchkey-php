@@ -4,6 +4,9 @@ namespace LaunchKey\Http;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * @internal
+ */
 abstract class Plugin implements EventSubscriberInterface {
 
     public static function getSubscribedEvents()

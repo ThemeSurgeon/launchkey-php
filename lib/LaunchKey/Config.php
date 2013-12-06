@@ -3,7 +3,20 @@
 namespace LaunchKey;
 
 /**
- * Config
+ * Handles configuration of {@link Client}.
+ *
+ * @property  LaunchKey\RSAKey|string  $api_public_key  Public key of LaunchKey's REST API.
+ * @property  LaunchKey\RSAKey|string  $keypair  The application's RSA keypair.
+ * @property  string  $app_key  The application key.
+ * @property  string  $domain  The domain and host of the application.
+ * @property  string  $host  The API host to use (defaults to `api.launchkey.com).
+ * @property  integer  $http_open_timeout  The HTTP open timeout in seconds (defaults to `2`).
+ * @property  integer  $http_read_timeout  The HTTP read timeout in seconds (defaults to `5`).
+ * @property  string  $passphrase  The passphrase used to decrypt the {@link  $keypair}.
+ * @property  boolean  $use_system_ssl_cert_chain  `TRUE` to use whatever CAs OpenSSL has installed on your system, `FALSE` to use the `ca-bundle.crt` file included in LaunchKey itself (recommended and default).
+ *
+ * @see Client::__construct()
+ * @see LaunchKey::configure()
  */
 class Config extends \ArrayObject {
 
@@ -64,6 +77,9 @@ class Config extends \ArrayObject {
         }
     }
 
+    /**
+     * @internal
+     */
     public function certificate_authority()
     {
         if ($this['use_system_ssl_cert_chain'])
@@ -76,6 +92,9 @@ class Config extends \ArrayObject {
         }
     }
 
+    /**
+     * @internal
+     */
     public function api_public_key($value = NULL)
     {
         if ($value === NULL)
@@ -86,6 +105,9 @@ class Config extends \ArrayObject {
         return $this->_api_public_key = new RSAKey($value);
     }
 
+    /**
+     * @internal
+     */
     public function keypair($value = NULL)
     {
         if ($value === NULL)

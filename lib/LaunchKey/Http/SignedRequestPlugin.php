@@ -4,6 +4,9 @@ namespace LaunchKey\Http;
 
 use LaunchKey\LaunchKey;
 
+/**
+ * @internal
+ */
 class SignedRequestPlugin extends Plugin {
 
     public function call($event)
