@@ -1,223 +1,248 @@
 <?php
 
+namespace LaunchKey;
+
+use LaunchKey\Exception\LaunchKeyException;
+use LaunchKey\Exception\ApiException;
+use LaunchKey\Exception\NotImplementedException;
+use LaunchKey\Http\Client as HttpClient;
+
 /**
  * LaunchKey
  *
  * API SDK that can be used to authorize users, check existing auth requests, and notify LaunchKey for logging.
  *
- * @author LaunchKey <developers@launchkey.com>
- * @package LaunchKey
+ * @author   LaunchKey  <developers@launchkey.com>
+ * @package  LaunchKey
  */
-class LaunchKey_Client
-{
-    private $api_host = "https://api.launchkey.com";
-    private $api_public_key;
-    private $app_key;
-    private $app_secret;
-    private $private_key;
-    private $domain;
-    private $ping_time;
-    private $ping_difference;
+class Client implements \ArrayAccess {
+
+    private $config;
+
+    private $http_client;
+
+    private $pinged_at = 0;
+
+    private $ping_difference = 0;
 
     /**
-     * __construct
+     * Instantiates a new `Client` with optionally supplied `$config`. If no
+     * `$config` is supplied, {@link LaunchKey::$config} is used.
      *
-     * @param mixed $app_key
-     * @param mixed $app_secret
-     * @param mixed $private_key
-     * @param mixed $domain
-     * @param string $version
-     * @access protected
+     * @param  array|Config  $config  The configuration to use.
      */
-    public function __construct($app_key, $app_secret, $private_key, $domain, $version = "v1")
+    public function __construct($config = NULL)
     {
-        $this->app_key = $app_key;
-        $this->app_secret = $app_secret;
-        $this->private_key = $private_key;
-        $this->domain = $domain;
-        $this->api_host = $this->api_host . "/" . $version . "/";
-    } //end __construct
-
-    /**
-     * ping - used to retrieve the API's public key and server time
-     *
-     * @access public
-     * @return string
-     */
-    public function ping()
-    {
-        if (empty($this->ping_time)) {
-            $response = $this->json_curl($this->api_host . "ping", "GET");
-            $json_response = json_decode($response, true);
-            $this->api_public_key = $json_response['key'];
-            $this->ping_time = $json_response['launchkey_time'];
-            $this->ping_difference = time();
-        } else {
-            $this->ping_time = (time() - $this->ping_difference) + $this->ping_time;
+        if ($config === NULL)
+        {
+            $this->config = LaunchKey::$config;
         }
-    } //end ping
-
-    /**
-     * prepare_auth - encrypts app_secret with RSA key and signs
-     *
-     * @access public
-     * @return string
-     */
-    public function prepare_auth()
-    {
-        if (empty($this->api_public_key)) {
-            $this->ping();
+        elseif ($config instanceof Config)
+        {
+            $this->config = clone $config;
         }
-        $data = array('secret' => $this->app_secret, 'stamped' => $this->ping_time);
-        $to_encrypt = json_encode($data);
-        $encrypted_app_secret = $this->rsa_encrypt($this->api_public_key, $to_encrypt);
-        $signature = $this->rsa_sign($this->private_key, $encrypted_app_secret);
-        $auth_array = array('app_key' => $this->app_key,
-            'secret_key' => $encrypted_app_secret,
-            'signature' => $signature);
-        return $auth_array;
-    } //end prepare_auth
+        elseif (is_array($config) OR ($config instanceof \Traversable))
+        {
+            $this->config = new Config($config);
+        }
+        else
+        {
+            throw new LaunchKeyException('Unknown configuration supplied');
+        }
+
+        $this->http_client = new HttpClient($this);
+    }
 
     /**
-     * authorize - used to send an authorization request for a specific username
+     * Starts the authorization process for the supplied `$username`.
      *
-     * @param mixed $username
-     * @throws Exception
-     * @access public
-     * @return string
+     * @example Start authorization for a user.
+     *     $auth_request = LaunchKey::authorize('bill');
+     *     // => "lyyk9ai..."
+     *
+     * @param   string   $username  Username of LaunchKey user to authenticate.
+     * @param   boolean  $session   `TRUE` for session auth, `FALSE` for transactional.
+     * @return  string   An authorization request token.
+     * @throws  LaunchKey\Exception\ApiException
      */
     public function authorize($username, $session = TRUE)
     {
-        $params = $this->prepare_auth();
-        $params['username'] = $username;
-        $params['session'] = $session;
-        $response = $this->json_curl($this->api_host . "auths", "POST", $params);
-        $response = json_decode($response, true);
+        $params = array(
+            'username' => $username,
+            'session'  => $session,
+        );
 
-        if (isset($response['status_code'])) {
-            throw new Exception('Error code returned: ' . $response['status_code']);
-        }
+        $response = $this->http_client->post('auths', $params);
         return $response['auth_request'];
-    } //end authorize
+    }
 
     /**
-     * poll_request - poll the API to find the status of an authorization request
+     * Checks the status of the authorization process for the supplied
+     * `$auth_request` (returned by `authorize()`).
      *
-     * @param mixed $auth_request
-     * @access public
-     * @return array
+     * @example Poll an auth request.
+     *     $auth_request = LaunchKey::authorize('bob');
+     *     $response     = FALSE;
+     *
+     *     while ( ! $response)
+     *     {
+     *         // Check periodically until a response is given
+     *         sleep(1);
+     *         LaunchKey::poll($auth_request);
+     *     }
+     *
+     *     // Move on to check the response...
+     *
+     * @param   string         $auth_request  The auth request token to check.
+     * @return  boolean|array  `FALSE` when pending, otherwise the response array.
+     * @throws  LaunchKey\Exception\ApiException
+     */
+    public function poll($auth_request)
+    {
+        try
+        {
+            return $this->http_client->get('poll', array(
+                'auth_request' => $auth_request,
+            ));
+        }
+        catch (ApiException $e)
+        {
+            if ($e->getCode() == 70403)
+            {
+                // Pending response
+                return FALSE;
+            }
+            else
+            {
+                // Rethrow the exception
+                throw $e;
+            }
+        }
+    }
+
+    /**
+     * @see  poll
      */
     public function poll_request($auth_request)
     {
-        $params = $this->prepare_auth();
-        $params['auth_request'] = $auth_request;
-        $response = $this->json_curl($this->api_host . "poll", "GET", $params);
-        return json_decode($response, true);
-    } //end poll_request
+        return $this->poll($auth_request);
+    }
 
     /**
-     * is_authorized - returns boolean value based on whether user has denied or accepted the authorization
-     * request and it has passed all security checks
+     * Checks whether the user accepted to declined authorization in an auth
+     * response returned by `poll()`.
      *
-     * @param mixed $package
-     * @access public
-     * @return boolean
+     * @example Checking authorization.
+     *
+     *     $response = LaunchKey::poll($auth_request);
+     *
+     *     if (LaunchKey::is_authorized($response['auth']))
+     *     {
+     *         // User allowed the request
+     *     }
+     *     else
+     *     {
+     *         // User declined the request
+     *     }
+     *
+     * @param   string       $auth_response  The auth response to validate.
+     * @param   string|null  $auth_request   The auth request.
+     * @return  boolean      Whether the authorization attempt was accepted or declined.
+     * @throws  LaunchKey\Exception\ApiException
      */
-    public function is_authorized($package, $auth_request='')
+    public function is_authorized($auth_response, $auth_request = NULL)
     {
-        $auth_response = json_decode($this->rsa_decrypt($this->private_key, $package), true);
+        $auth  = $this->load_auth($auth_response);
+        $valid = $this->is_valid_auth($auth, $auth_request);
 
-        if (!isset($auth_response['response']) || !isset($auth_response['auth_request']) || $auth_response['auth_request'] != $auth_request ) {
-            return $this->notify("Authenticate", "False");
-        }
-
-        $pins_valid = False;
-        try {
-           $pins_valid = $this->pins_valid($auth_response['app_pins'], $auth_response['device_id']);
-        } catch (Exception $e) {
-           $pins_valid = True;
-        }
-
-        if($pins_valid) {
-            $response = strtolower($auth_response['response']) === 'true' ? 'True':'False';
-            return $this->notify("Authenticate", $response, $auth_response['auth_request']);
-        }
-
-        return False;
-    } // end is_authorized
+        return $this->notify('authenticate', $valid, $auth['auth_request']);
+    }
 
     /**
-     * notify - notifies LaunchKey as to whether the user was logged in/out
+     *  Verifies the authenticity of a webhook request from LaunchKey,
+     *  returning the `user_hash` if successful.
      *
-     * @param string $action
-     * @param boolean $status
-     * @param string $auth_request
-     * @param string $username
-     * @access public
-     * @return boolean
+     *  @example
+     *      if ($user_hash = LaunchKey::deorbit($_GET))
+     *      {
+     *          // Deorbit is valid
+     *      }
+     *      else
+     *      {
+     *          // Deorbit is invalid or expired
+     *      }
+     *
+     * @param   array  $params  Parameters supplied by LaunchKey in webhook request.
+     * @return  boolean|string  The user hash when request is valid, `FALSE` otherwise
      */
-    public function notify($action, $status, $auth_request = "", $username = "")
+    public function deorbit(array $params = array())
     {
-        $params = $this->prepare_auth();
-        if ($username != "") {
-            $params['username'] = $username;
-        }
-        $params['action'] = $action;
-        $params['status'] = $status;
-        $params['auth_request'] = $auth_request;
-        $response = json_decode($this->json_curl($this->api_host . "logs", "PUT", $params), True);
+        $deorbit   = (isset($params['deorbit'])) ? (string) $params['deorbit'] : '';
+        $signature = (isset($params['signature'])) ? (string) $params['signature'] : '';
 
-        if(isset($response['message']) && $response['message'] == "Successfully updated") {
-            $status_boolean = strtolower($status) === 'true' ? True:False;
-            return $status_boolean;
+        if ( ! $this['api_public_key']->verify($signature, $deorbit))
+        {
+            return FALSE;
         }
 
-        return False;
-    } //end notify
+        $payload   = json_decode($deorbit, TRUE);
+        $timestamp = strtotime($payload['launchkey_time']) - $this->ping_difference;
+
+        // Deorbits expire after 5 minutes
+        return ($timestamp > time() - 5 * 60) ? $payload['user_hash'] : FALSE;
+    }
 
     /**
-     * deorbit - verify the deorbit request by signature and timestamp, return the user_hash needed to identify the
-     * user and log them out
+     * Notifies LaunchKey to confirm that the user's session has ended.
      *
-     * @param string $orbit
-     * @param string $signature
-     * @return NULL
+     * @param   string   $auth_request  The auth request of the session.
+     * @return  boolean  `TRUE` when successful
      */
-    public function deorbit($orbit, $signature)
+    public function deauthorize($auth_request)
     {
-        $this->ping();
-        if ($this->rsa_verify_sign($this->api_public_key, $signature, $orbit)) {
-            $decoded = json_decode($orbit, true);
-            $date_request = $decoded['launchkey_time'];
-            if (($this->ping_time - $date_request) > 300) {
-                return $decoded['user_hash'];
-            }
-        }
-        return NULL;
-    } //end deorbit
+        return $this->notify('revoke', TRUE, $auth_request);
+    }
 
     /**
-     * logout - notifies API that the session end has been confirmed
-     *
-     * @param string $auth_request
-     * @access public
-     * @return boolean
+     * @see  deauthorize
      */
     public function logout($auth_request)
     {
-        return $this->notify("Revoke", "True", $auth_request);
-    } //end logout
+        return $this->deauthorize($auth_request);
+    }
 
     /**
-     * pins_valid - return boolean for whether the tokens pass or not
+     * Notifies LaunchKey as to whether the user was logged in/out.
      *
-     * @param $app_pins
-     * @param $device
-     * @return boolean
+     * @param  string       $action
+     * @param  boolean      $status
+     * @param  string|null  $auth_request
+     * @internal
      */
-    public function pins_valid($app_pins, $device)
+    public function notify($action, $status, $auth_request = NULL)
     {
-        throw new Exception('Not implemented. Subclass must implement.');
+        $params = array(
+            'action'       => ucfirst($action),
+            'status'       => $status,
+            'auth_request' => $auth_request,
+        );
+
+        $this->http_client->put('logs', $params);
+
+        return $status;
+    }
+
+    /**
+     * Tests if supplied `$device` and `$app_pins` match persisted records of
+     * previous `$app_pins`.
+     *
+     * @param   $device_id  Device identifier to check.
+     * @param   $app_pins   Current application pins.
+     * @return  boolean     `TRUE` if pins are valid, `FALSE` otherwise.
+     */
+    public function has_valid_pins($device_id, $app_pins)
+    {
+        throw new NotImplementedException(__CLASS__, __METHOD__);
         $user = $this->get_user_hash();
         $pins = $this->get_existing_pins($user, $device);
         $update = False;
@@ -231,7 +256,15 @@ class LaunchKey_Client
         if($update) {
             $this->update_pins($user, $device, $app_pins);
         }
-    } //end pins_valid
+    }
+
+    /**
+     * @see  has_valid_pins
+     */
+    public function pins_valid($app_pins, $device)
+    {
+        return $this->has_valid_pins($device, $app_pins);
+    }
 
     /**
      * get_user_hash - get the user hash for this request
@@ -239,145 +272,152 @@ class LaunchKey_Client
      */
     public function get_user_hash()
     {
-        throw new Exception('Not implemented. Subclass must implement.');
-
+        throw new NotImplementedException(__CLASS__, __METHOD__);
     } //end get_user_hash
 
     /**
      * get_existing_pins - get string of all PINs comma delimited that exist for the user already from persistent store
      *
-     * @param $user
-     * @param $device
+     * @param  $user
+     * @param  $device
      */
     public function get_existing_pins($user, $device)
     {
-        throw new Exception('Not implemented. Subclass must implement.');
+        throw new NotImplementedException(__CLASS__, __METHOD__);
     } //end get_existing_pins
 
     /**
      * update_pins - Update the persistent store with the latest PINs
      *
-     * @param $user
-     * @param $device
-     * @param $pins
+     * @param  $user
+     * @param  $device
+     * @param  $pins
      */
     public function update_pins($user, $device, $pins)
     {
-        throw new Exception('Not implemented. Subclass must implement.');
+        throw new NotImplementedException(__CLASS__, __METHOD__);
     } //end update_pins
 
-    /**
-     * json_curl
-     *
-     * @param string $url
-     * @param string $method
-     * @param array $params
-     * @access public
-     * @return string
-     */
-    public function json_curl($url, $method = "GET", $params = array())
+    public function offsetGet($option)
     {
-        if ($method == "GET" && count($params)) {
-            $query_params = http_build_query($params);
-            $url = $url . "/?" . $query_params;
+        if ($option == 'api_public_key')
+        {
+            return $this->api_public_key();
         }
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, '10');
+        return $this->config[$option];
+    }
 
-        if ($method != "GET") {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+    public function offsetSet($option, $value)
+    {
+        throw new Exception\LaunchKeyException('client config is read-only');
+    }
+
+    public function offsetExists($option)
+    {
+        return array_key_exists($option, $this->config);
+    }
+
+    public function offsetUnset($option)
+    {
+        throw new Exception\LaunchKeyException('client config is read-only');
+    }
+
+    /**
+     * @internal
+     */
+    public function api_public_key()
+    {
+        if ($this->config['api_public_key'] === NULL)
+        {
+            $this->ping();
         }
 
-        $result = curl_exec($ch);
-        curl_close($ch);
-        return $result;
-    } //end json_curl
+        return $this->config['api_public_key'];
+    }
 
     /**
-     * rsa_generate - return a public/private keypair
+     * Used to retrieve the API's public key and server time.
      *
-     * @param int $bits
-     * @access public
-     * @return array
+     * @return  integer  Current unix timestamp with time difference.
+     * @see     ping_time
+     * @internal
      */
-    public function rsa_generate($bits = 2048)
+    public function ping()
     {
-        $rsa = new Crypt_RSA();
-        define('CRYPT_RSA_EXPONENT', 65537);
-        $keypair = $rsa->createKey($bits);
-        return $keypair;
-    } //end RSA_generate
+        if ( ! $this->should_ping() AND $this->config['api_public_key'] !== NULL)
+            return;
+
+        $this->pinged_at = time();
+
+        $response = $this->http_client->get('ping');
+
+        $this->config['api_public_key'] = $response['key'];
+        return $this->ping_time(strtotime($response['launchkey_time']));
+    }
+
+    public function ping_timestamp()
+    {
+        return strftime('%Y-%m-%d %H:%M:%S', $this->ping_time());
+    }
+
+    public function ping_time($value = NULL)
+    {
+        if ($value !== NULL)
+        {
+            $this->ping_difference = $value - time();
+        }
+
+        return time() + $this->ping_difference;
+
+    }
+
+    private function should_ping()
+    {
+        return (time() - 5 * 60 > $this->pinged_at);
+    }
 
     /**
-     * rsa_decrypt - decrypt base64 encoded package
-     *
-     * @param mixed $key
-     * @param mixed $package
-     * @access public
-     * @return string
+     * @internal
      */
-    public function rsa_decrypt($key, $package)
+    protected function is_valid_auth($auth, $auth_request = NULL)
     {
-        $rsa = new Crypt_RSA();
-        $rsa->loadKey($key);
-        $decrypted = $rsa->decrypt(base64_decode($package));
-        return $decrypted;
-    } //end rsa_decrypt
+        if ($auth_request === NULL)
+        {
+            $auth_request = $auth['auth_request'];
+        }
+
+        $pins_valid = FALSE;
+
+        try
+        {
+            $pins_valid = $this->has_valid_pins($auth['device_id'], $auth['app_pins']);
+        }
+        catch (NotImplementedException $e)
+        {
+            $pins_valid = true;
+        }
+
+        $success = filter_var($auth['response'], FILTER_VALIDATE_BOOLEAN);
+
+        return ($pins_valid AND $success AND isset($auth['auth_request']) AND
+            $auth['auth_request'] == $auth_request);
+    }
 
     /**
-     * rsa_encrypt - encrypt message and return base64 encoded
-     *
-     * @param mixed $key
-     * @param mixed $message
-     * @access public
-     * @return string
+     * @internal
      */
-    public function rsa_encrypt($key, $message)
+    protected function load_auth($crypted_auth)
     {
-        $rsa = new Crypt_RSA();
-        $rsa->loadKey($key);
-        $encrypted = base64_encode($rsa->encrypt($message));
-        return $encrypted;
-    } //end rsa_encrypt
+        return json_decode($this->decrypt_auth($crypted_auth), TRUE);
+    }
 
     /**
-     * rsa_sign - sign a message with
-     *
-     * @param mixed $key
-     * @param mixed $package
-     * @access public
-     * @return mixed
+     * @internal
      */
-    public function rsa_sign($key, $package)
+    protected function decrypt_auth($crypted_auth)
     {
-        $rsa = new Crypt_RSA();
-        $rsa->setHash("sha256");
-        $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-        $rsa->loadKey($key);
-        $signature = base64_encode($rsa->sign(base64_decode($package)));
-        return $signature;
-    } //end rsa_sign
+        return $this['keypair']->private_decrypt($crypted_auth);
+    }
 
-    /**
-     * rsa_verify_sign - verify a signed message
-     *
-     * @param mixed $key
-     * @param $signature
-     * @param mixed $package
-     * @access public
-     * @return boolean
-     */
-    public function rsa_verify_sign($key, $signature, $package)
-    {
-        $rsa = new Crypt_RSA();
-        $rsa->setHash("sha256");
-        $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-        $rsa->loadKey($key);
-        $verify = $rsa->verify(base64_decode($package), $signature);
-        return $verify;
-    } //end rsa_verify_sign
-
-} //End LaunchKey
+} // End Client

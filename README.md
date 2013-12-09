@@ -1,53 +1,121 @@
-# LaunchKey PHP SDK
-
-## Description
+# LaunchKey PHP Client [![Build Status](https://travis-ci.org/LaunchKey/launchkey-php.png?branch=master)](https://travis-ci.org/LaunchKey/launchkey-php)
 
 Use to easily interact with LaunchKey's API.
 
 ## Installation
 
-    $ git clone https://github.com/LaunchKey/launchkey-php.git
+The recommended installation is through [Composer](http://getcomposer.org/).
+Install Composer:
 
-and
+    $ curl -sS https://getcomposer.org/installer | php
 
-    $ php composer.phar install
+And then add LaunchKey as a dependency:
+
+    $ php composer.phar require launchkey/launchkey:0.1.0
+
+After installing, you need to require Composer's autoloader:
+
+```php
+require 'vendor/autoload.php';
+```
+
+## Configuration
+
+Configuration can either be done globally:
+
+```php
+use LaunchKey\LaunchKey;
+
+LaunchKey::configure(array(
+    'domain'     => 'yourdomain.tld',
+    'app_key'    => 1234567890,
+    'secret_key' => 'abcdefghijklmnopqrstuvwxyz',
+    'keypair'    => file_get_contents('path/to/private_key.pem'),
+));
+```
+
+Or by instantiating a new `LaunchKey\Client`:
+
+```php
+$launchkey = new LaunchKey\Client(array(
+    'domain'     => 'yourdomain.tld',
+    'app_key'    => 1234567890,
+    'secret_key' => 'abcdefghijklmnopqrstuvwxyz',
+    'keypair'    => file_get_contents('path/to/private_key.pem'),
+));
+```
 
 ## Usage
 
-### To create a LaunchKey API object
+### Authorization
 
-    include("LaunchKey/Client.php"); // can be excluded if using an autoloader w/ Composer
-    $app_key = 1234567890; //log in to https://dashboard.launchkey.com to get keys
-    $secret_key = "SECRET_KEY";
-    $private_key = file_get_contents("/path/to/private.key");
-    $domain = "yourdomain.tld";
-    $launchkey = new LaunchKey_Client($app_key, $secret_key, $private_key, $domain);
+Make an authorization request with the user's LaunchKey username:
 
-### When a user wishes to login
+```php
+$auth_request = LaunchKey::authorize($username);
+// => "71xmyusohv0171fg..."
+```
 
-    $session = True;
-    #Set session to False if it's a transactional authorization and a session doesn't need to be kept.
-    $auth_request = $launchkey->authorize($username, $session);
+For a transactional authorization request, pass the `$session` option as `FALSE`:
 
+```php
+LaunchKey::authorize($username, FALSE);
+```
 
-### To check up on whether that user has launched or not
+### Polling
 
-    $launch_status = $launchkey->poll_request($auth_request);
+Check whether the user has responded to the authorization request:
 
+```php
+// The user has not responded:
+$launch_status = LaunchKey::poll($auth_request);
+// =>  FALSE
 
-### To figure out whether the user authorized or denied the request
+// The user has responded:
+$launch_status = LaunchKey::poll($auth_request);
+// => array('auth' => '...', 'user_hash' => '...')
+```
 
-    if ($launchkey->is_authorized($launch_status['auth'], $auth_request))
-        #Log the user in
+### Validation
 
+To test whether the user accepted or rejected the request:
 
-### When a user logs out
+```php
+if (LaunchKey::is_authorized($launch_status['auth'], $auth_request))
+{
+    // The user accepted the request
+}
+else
+{
+    // The user rejected the request
+}
+```
 
-    $launchkey->logout($auth_request);
+### Log Out
 
-### Handling a deorbit callback (https://launchkey.com/docs/api/authentication-flow/php#deorbit-callback)
+To end a session:
 
-    $launchkey->deorbit($deorbit, $signature);
+```php
+LaunchKey::deauthorize($auth_request);
+```
+
+Alternatively, a deorbit callback can be handled (see [deorbit docs](https://launchkey.com/docs/api/authentication-flow/php#deorbit-callback) for details):
+
+```php
+$params = array(
+    'deorbit'   => $_GET['deorbit'],
+    'signature' => $_GET['signature'],
+);
+
+if ($user_hash = LaunchKey::deorbit($params))
+{
+    // The deorbit was successful
+}
+else
+{
+    // The deorbit was invalid or expired
+}
+```
 
 More Documentation: https://launchkey.com/docs/api/authentication-flow/php#user-authentication
 

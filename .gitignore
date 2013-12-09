@@ -1,3 +1,8 @@
 .idea
-vendor
+.php-version
 composer.lock
+/coverage
+/phpunit.xml
+/vendor
+/docs
+/gh-pages
