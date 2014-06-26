@@ -62,14 +62,17 @@ class Client implements \ArrayAccess {
      *
      * @param   string   $username  Username of LaunchKey user to authenticate.
      * @param   boolean  $session   `TRUE` for session auth, `FALSE` for transactional.
+     * @param   boolean  $user_push_id   If your app would like to be returned an ID for the user
+     * that can be used to initiate notifications in the future without user input set TRUE.
      * @return  string   An authorization request token.
      * @throws  LaunchKey\Exception\ApiException
      */
-    public function authorize($username, $session = TRUE)
+    public function authorize($username, $session = TRUE, $user_push_id = FALSE)
     {
         $params = array(
             'username' => $username,
             'session'  => $session,
+            'user_push_id'  => $user_push_id,
         );
 
         $response = $this->http_client->post('auths', $params);
