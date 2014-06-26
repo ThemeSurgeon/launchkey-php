@@ -62,6 +62,12 @@ For a transactional authorization request, pass the `$session` option as `FALSE`
 LaunchKey::authorize($username, FALSE);
 ```
 
+To have a user_push_id returned, pass the `$user_push_id` option as `TRUE`:
+
+```php
+LaunchKey::authorize($username, FALSE, TRUE);
+```
+
 ### Polling
 
 Check whether the user has responded to the authorization request:
