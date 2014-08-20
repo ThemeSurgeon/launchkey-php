@@ -158,6 +158,10 @@ class Client implements \ArrayAccess {
         $auth  = $this->load_auth($auth_response);
         $valid = $this->is_valid_auth($auth, $auth_request);
 
+        if($valid == false) {
+            $valid = 0;
+        }
+
         return $this->notify('authenticate', $valid, $auth['auth_request']);
     }
 

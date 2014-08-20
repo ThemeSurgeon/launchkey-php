@@ -11,7 +11,7 @@ Install Composer:
 
 And then add LaunchKey as a dependency:
 
-    $ php composer.phar require launchkey/launchkey:0.1.0
+    $ php composer.phar require launchkey/launchkey:0.1.1
 
 After installing, you need to require Composer's autoloader:
 
