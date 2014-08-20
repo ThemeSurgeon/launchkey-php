@@ -11,4 +11,3 @@ notifications:
   email:
     recipients:
       - developers@launchkey.com
-      - gabe@ga.be
