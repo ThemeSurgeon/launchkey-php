@@ -188,7 +188,7 @@ namespace LaunchKey\Tests\Http {
                         'r' => '13.0.0',
                     ),
                     '5.5.4',
-                    'launchkey-php/0.1.0 (Composer; PHP 5.5.4 x86_64-darwin13.0.0)',
+                    'launchkey-php/0.1.1 (Composer; PHP 5.5.4 x86_64-darwin13.0.0)',
                 ),
                 array(
                     array(
@@ -197,7 +197,7 @@ namespace LaunchKey\Tests\Http {
                         'r' => '6.1-RELEASE-p15',
                     ),
                     '5.3.14',
-                    'launchkey-php/0.1.0 (Composer; PHP 5.3.14 i386-freebsd6.1-RELEASE-p15)',
+                    'launchkey-php/0.1.1 (Composer; PHP 5.3.14 i386-freebsd6.1-RELEASE-p15)',
                 ),
                 array(
                     array(
@@ -206,7 +206,7 @@ namespace LaunchKey\Tests\Http {
                         'r' => '3.2.0-4',
                     ),
                     '5.4.9',
-                    'launchkey-php/0.1.0 (Composer; PHP 5.4.9 amd64-debian3.2.0-4)',
+                    'launchkey-php/0.1.1 (Composer; PHP 5.4.9 amd64-debian3.2.0-4)',
                 ),
             );
         }
