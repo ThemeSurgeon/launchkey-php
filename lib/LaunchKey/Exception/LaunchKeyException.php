@@ -8,11 +8,12 @@ namespace LaunchKey\Exception;
 class LaunchKeyException extends \Exception
 {
 
-    public function __construct($message = '', array $variables = NULL, $code = 0, \Exception $previous = null)
+    public function __construct($message = '', array $variables = null, $code = 0, \Exception $previous = null)
     {
         parent::__construct(
-            strtr($message, $variables), (integer) $code, $previous
+            strtr($message, $variables),
+            (integer)$code,
+            $previous
         );
     }
-
-} // LaunchKeyException
+}

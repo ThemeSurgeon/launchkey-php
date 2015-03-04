@@ -6,24 +6,18 @@ namespace LaunchKey\Http {
 
     function php_uname($mode = 'a')
     {
-        if ( ! empty(ClientTest::$mock_php_uname))
-        {
+        if (!empty(ClientTest::$mock_php_uname)) {
             return ClientTest::$mock_php_uname[$mode];
-        }
-        else
-        {
+        } else {
             return \php_uname($mode);
         }
     }
 
     function phpversion()
     {
-        if (ClientTest::$mock_phpversion)
-        {
+        if (ClientTest::$mock_phpversion) {
             return ClientTest::$mock_phpversion;
-        }
-        else
-        {
+        } else {
             return \phpversion();
         }
     }
@@ -42,7 +36,8 @@ namespace LaunchKey\Tests\Http {
      * @package  LaunchKey
      * @category Tests
      */
-    class ClientTest extends \PHPUnit_Framework_TestCase {
+    class ClientTest extends \PHPUnit_Framework_TestCase
+    {
 
         public static $mock_php_uname = array();
 
@@ -72,8 +67,7 @@ namespace LaunchKey\Tests\Http {
                     array(
                         'username' => 'bob',
                     ),
-                    array(
-                    ),
+                    array(),
                     array(
                         'auth_response' => 'sdlkfjasdflhasdgadsg',
                     ),
@@ -81,10 +75,10 @@ namespace LaunchKey\Tests\Http {
                 array(
                     'logs',
                     array(
-                        'action'       => 'Revoke',
-                        'status'       => TRUE,
+                        'action' => 'Revoke',
+                        'status' => TRUE,
                         'auth_request' => 'sdflksdjfsdf',
-                        'username'     => 'foo',
+                        'username' => 'foo',
                     ),
                     array(
                         'Content-Type' => 'application/json'
@@ -106,8 +100,7 @@ namespace LaunchKey\Tests\Http {
                 ->andReturn($expected);
 
             $mock_query = Mockery::mock('Guzzle\\Http\\QueryString');
-            foreach ($params as $key => $value)
-            {
+            foreach ($params as $key => $value) {
                 $mock_query->shouldReceive('set')
                     ->with($key, $value);
             }
@@ -217,7 +210,7 @@ namespace LaunchKey\Tests\Http {
          */
         public function test_user_agent($php_uname, $phpversion, $expected)
         {
-            self::$mock_php_uname  = $php_uname;
+            self::$mock_php_uname = $php_uname;
             self::$mock_phpversion = $phpversion;
 
             $client = new Client(NULL, FALSE);

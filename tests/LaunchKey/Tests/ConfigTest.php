@@ -10,7 +10,8 @@ use LaunchKey\Config;
  * @package  LaunchKey
  * @category Tests
  */
-class ConfigTest extends \PHPUnit_Framework_TestCase {
+class ConfigTest extends \PHPUnit_Framework_TestCase
+{
 
     private static $options = array(
         'domain', 'app_key', 'secret_key', 'passphrase', 'host',
@@ -30,20 +31,19 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
     public function test_new_config_sets_supplied_options()
     {
         $options = array(
-            'domain'                    => 'example.com',
-            'app_key'                   => 'abcdefghijklmnopqrstuvwxyz',
-            'secret_key'                => 's3cr3t!',
-            'passphrase'                => 'supersecret',
-            'host'                      => 'launchkey.example.com',
+            'domain' => 'example.com',
+            'app_key' => 'abcdefghijklmnopqrstuvwxyz',
+            'secret_key' => 's3cr3t!',
+            'passphrase' => 'supersecret',
+            'host' => 'launchkey.example.com',
             'use_system_ssl_cert_chain' => TRUE,
-            'http_open_timeout'         => 30,
-            'http_read_timeout'         => 15,
+            'http_open_timeout' => 30,
+            'http_read_timeout' => 15,
         );
 
         $config = new Config($options);
 
-        foreach ($options as $option => $expected)
-        {
+        foreach ($options as $option => $expected) {
             $this->assertEquals($expected, $config[$option]);
         }
     }
@@ -52,8 +52,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
     {
         $config = new Config;
 
-        foreach (self::$options as $option)
-        {
+        foreach (self::$options as $option) {
             $config->$option = 'foo';
             $this->assertEquals('foo', $config->$option);
         }
@@ -63,8 +62,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
     {
         $config = new Config;
 
-        foreach (self::$options as $option)
-        {
+        foreach (self::$options as $option) {
             $config[$option] = 'bar';
             $this->assertEquals('bar', $config[$option]);
         }
@@ -72,15 +70,12 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
 
     public function test_throws_exception_when_getting_invalid_options()
     {
-        $error  = NULL;
+        $error = NULL;
         $config = new Config;
 
-        try
-        {
+        try {
             $config['teehee'];
-        }
-        catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             $error = $e;
         }
 
@@ -88,30 +83,27 @@ class ConfigTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($error instanceof \LaunchKey\Exception\LaunchKeyException);
     }
 
-     public function test_throws_exception_when_setting_invalid_options()
-     {
-        $error  = NULL;
+    public function test_throws_exception_when_setting_invalid_options()
+    {
+        $error = NULL;
         $config = new Config;
 
-        try
-        {
+        try {
             $config['ಠ_ಠ'] = 'does not approve';
-        }
-        catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             $error = $e;
         }
 
         $this->assertNotNull($error);
         $this->assertTrue($error instanceof \LaunchKey\Exception\LaunchKeyException);
-     }
+    }
 
     public function test_certificate_authority()
     {
         $config = new Config;
 
         $this->assertEquals(
-            realpath(__DIR__.'/../../../resources/ca-bundle.crt'),
+            realpath(__DIR__ . '/../../../resources/ca-bundle.crt'),
             $config['certificate_authority']
         );
 

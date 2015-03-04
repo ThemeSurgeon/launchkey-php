@@ -11,41 +11,25 @@ use Mockery;
  * @package  LaunchKey
  * @category Tests
  */
-class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
-
-    protected function setUp()
-    {
-        parent::setUp();
-
-        $this->original_config = LaunchKey::$config;
-        $this->original_client = LaunchKey::$client;
-    }
-
-    protected function tearDown()
-    {
-        parent::tearDown();
-
-        LaunchKey::$config = $this->original_config;
-        LaunchKey::$client = $this->original_client;
-    }
+class LaunchKeyTest extends \PHPUnit_Framework_TestCase
+{
 
     public function test_configure_sets_supplied_options()
     {
         $options = array(
-            'domain'                    => 'example.com',
-            'app_key'                   => 'abcdefghijklmnopqrstuvwxyz',
-            'secret_key'                => 's3cr3t!',
-            'passphrase'                => 'supersecret',
-            'host'                      => 'launchkey.example.com',
+            'domain' => 'example.com',
+            'app_key' => 'abcdefghijklmnopqrstuvwxyz',
+            'secret_key' => 's3cr3t!',
+            'passphrase' => 'supersecret',
+            'host' => 'launchkey.example.com',
             'use_system_ssl_cert_chain' => TRUE,
-            'http_open_timeout'         => 30,
-            'http_read_timeout'         => 15,
+            'http_open_timeout' => 30,
+            'http_read_timeout' => 15,
         );
 
         LaunchKey::configure($options);
 
-        foreach ($options as $option => $expected)
-        {
+        foreach ($options as $option => $expected) {
             $this->assertEquals($expected, LaunchKey::$config[$option]);
         }
     }
@@ -67,6 +51,22 @@ class LaunchKeyTest extends \PHPUnit_Framework_TestCase {
             ->andReturn('foo');
 
         $this->assertEquals('foo', LaunchKey::authorize('bob_bobson'));
+    }
+
+    protected function setUp()
+    {
+        parent::setUp();
+
+        $this->original_config = LaunchKey::$config;
+        $this->original_client = LaunchKey::$client;
+    }
+
+    protected function tearDown()
+    {
+        parent::tearDown();
+
+        LaunchKey::$config = $this->original_config;
+        LaunchKey::$client = $this->original_client;
     }
 
 } // End LaunchKeyTest

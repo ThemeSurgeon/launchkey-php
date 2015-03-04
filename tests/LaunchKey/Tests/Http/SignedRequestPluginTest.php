@@ -10,7 +10,8 @@ use LaunchKey\Http\SignedRequestPlugin;
  * @package  LaunchKey
  * @category Tests
  */
-class SignedRequestPluginTest extends \PHPUnit_Framework_TestCase {
+class SignedRequestPluginTest extends \PHPUnit_Framework_TestCase
+{
 
     public function test_does_not_sign_ping_requests()
     {
