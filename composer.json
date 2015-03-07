@@ -1,0 +1,40 @@
+{
+  "name": "launchkey/launchkey",
+  "description": "Official PHP library for LaunchKey Authentication",
+  "type": "library",
+  "keywords": [
+    "authentication",
+    "launchkey",
+    "security"
+  ],
+  "homepage": "https://github.com/launchkey/launchkey-php",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "LaunchKey",
+      "email": "developers@launchkey.com",
+      "homepage": "https://launchkey.com",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://launchkey.desk.com/",
+    "wiki": "https://launchkey.com/docs/api/overview",
+    "source": "https://github.com/launchkey/launchkey-php"
+  },
+  "autoload": {
+    "psr-4": {
+      "LaunchKey\\SDK\\Test\\": "test",
+      "LaunchKey\\SDK\\": "src"
+    }
+  },
+  "require": {
+    "symfony/event-dispatcher": "~2.3",
+    "phpseclib/phpseclib": "~0.3,>= 0.3.5"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.4",
+    "phake/phake": "~2.0",
+    "doctrine/common": "*"
+  }
+}
