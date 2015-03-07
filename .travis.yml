@@ -24,7 +24,7 @@ matrix:
 before_script:
   - COMPOSER_ROOT_VERSION=dev-master composer --prefer-source --dev install
   - if [ "$GUZZLE_VERSION" != "" ]; then composer require "guzzle/guzzle:${GUZZLE_VERSION}" --prefer-source; fi
-  - if [ "SYMFONY_EVENT_DISPATCHER_VERSION" != "" ]; then composer require "symfony/event-dispatcher:${SYMFONY_EVENT_DISPATCHER_VERSION}" --prefer-source; fi
+  - if [ "$SYMFONY_EVENT_DISPATCHER_VERSION" != "" ]; then composer require "symfony/event-dispatcher:${SYMFONY_EVENT_DISPATCHER_VERSION}" --prefer-source; fi
 
 script: vendor/bin/phpunit
 
