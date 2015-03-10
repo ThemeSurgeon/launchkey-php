@@ -20,13 +20,20 @@ class BasicAuthService implements AuthService
     private $httpService;
 
     /**
+     * @var EventDispatcher
+     */
+    private $eventDispatcher;
+
+    /**
      * @param CryptService $cryptService
      * @param ApiService $httpService
+     * @param EventDispatcher $eventDispatcher
      */
-    public function __construct(CryptService $cryptService, ApiService $httpService)
+    public function __construct(CryptService $cryptService, ApiService $httpService, EventDispatcher $eventDispatcher)
     {
         $this->cryptService = $cryptService;
         $this->httpService = $httpService;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function authorize($username) {
@@ -47,7 +54,7 @@ class BasicAuthService implements AuthService
         // TODO: Implement deOrbit() method.
     }
 
-    public function handleCallback(array $formData)
+    public function handleCallback(array $postData)
     {
         // TODO: Implement handleCallback() method.
     }

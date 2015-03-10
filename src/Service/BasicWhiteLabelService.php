@@ -22,13 +22,20 @@ class BasicWhiteLabelService implements WhiteLabelService
     private $httpService;
 
     /**
+     * @var EventDispatcher
+     */
+    private $eventDispatcher;
+
+    /**
      * @param CryptService $cryptService
      * @param ApiService $httpService
+     * @param EventDispatcher $eventDispatcher
      */
-    public function __construct(CryptService $cryptService, ApiService $httpService)
+    public function __construct(CryptService $cryptService, ApiService $httpService, EventDispatcher $eventDispatcher)
     {
         $this->cryptService = $cryptService;
         $this->httpService = $httpService;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -37,5 +44,14 @@ class BasicWhiteLabelService implements WhiteLabelService
      */
     public function createUser($identifier) {
 
+    }
+
+    /**
+     * Set the event dispatcher
+     * @param EventDispatcher $eventDispatcher
+     */
+    public function setEventDispatcher(EventDispatcher $eventDispatcher)
+    {
+        $this->eventDispatcher = $eventDispatcher;
     }
 }

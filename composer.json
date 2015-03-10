@@ -29,7 +29,6 @@
     }
   },
   "require": {
-    "symfony/event-dispatcher": "~2.3",
     "phpseclib/phpseclib": "~0.3,>= 0.3.5"
   },
   "require-dev": {

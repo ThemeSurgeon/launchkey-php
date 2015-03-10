@@ -10,27 +10,15 @@ env:
   matrix:
   - GUZZLE_VERSION=~3.0
   - GUZZLE_VERSION=dev-master
-  - SYMFONY_EVENT_DISPATCHER_VERSION=~2.3.0
-  - SYMFONY_EVENT_DISPATCHER_VERSION=~2.4.0
-  - SYMFONY_EVENT_DISPATCHER_VERSION=~2.5.0
-  - SYMFONY_EVENT_DISPATCHER_VERSION=~2.6.0
-  - 'SYMFONY_EVENT_DISPATCHER_VERSION="dev-master as 2.99.0"'
 
 matrix:
-  exclude:
-  - php: 5.3
-    env: SYMFONY_EVENT_DISPATCHER_VERSION=dev-master
-  - php: 5.4
-    env: SYMFONY_EVENT_DISPATCHER_VERSION=dev-master
   allow_failures:
   - env: GUZZLE_VERSION=dev-master
-  - env: SYMFONY_EVENT_DISPATCHER_VERSION=dev-master
 
 install: COMPOSER_ROOT_VERSION=dev-master composer --prefer-source --dev install
 
 before_script:
 - if [ "$GUZZLE_VERSION" != "" ]; then composer require "guzzle/guzzle:${GUZZLE_VERSION}" --prefer-source; fi
-- if [ "$SYMFONY_EVENT_DISPATCHER_VERSION" != "" ]; then composer require "symfony/event-dispatcher:${SYMFONY_EVENT_DISPATCHER_VERSION}" --prefer-source; fi
 
 script: vendor/bin/phpunit
 

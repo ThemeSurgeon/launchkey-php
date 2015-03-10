@@ -26,7 +26,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->client = null;
     }
 
-    public function testFactoryWithSameParametersReturnsTheSameAuth() {
+    public function testFactoryWithSameParametersReturnsTheSameAuth()
+    {
         $appKey = "APP_KEY";
         $secretKey = "SECRET_KEY";
         $privateKey = $this->getPrivateKey();
@@ -35,7 +36,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testFactoryMethodWithDifferentAppKeysReturnsDifferentAuth() {
+    public function testFactoryMethodWithDifferentAppKeysReturnsDifferentAuth()
+    {
         $secretKey = "SECRET_KEY";
         $privateKey = $this->getPrivateKey();
         $expected = Client::factory("APP_KEY_ONE", $secretKey, $privateKey);
@@ -43,7 +45,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertNotSame($expected, $actual);
     }
 
-    public function testFactoryMethodWithDifferentSecretKeysReturnsDifferentAuth() {
+    public function testFactoryMethodWithDifferentSecretKeysReturnsDifferentAuth()
+    {
         $appKey = "APP_KEY";
         $privateKey = $this->getPrivateKey();
         $expected = Client::factory($appKey, "SECRET_KEY_ONE", $privateKey);
@@ -51,7 +54,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertNotSame($expected, $actual);
     }
 
-    public function testFactoryMethodWithDifferentPublicKeysReturnsDifferentAuth() {
+    public function testFactoryMethodWithDifferentPublicKeysReturnsDifferentAuth()
+    {
         $appKey = "APP_KEY";
         $secretKey = "SECRET_KEY";
         $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
@@ -59,7 +63,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertNotSame($expected, $actual);
     }
 
-    public function testAuthReturnsTheSameAuth() {
+    public function testAuthReturnsTheSameAuth()
+    {
         $appKey = "APP_KEY";
         $secretKey = "SECRET_KEY";
         $privateKey = $this->getPrivateKey();
@@ -68,7 +73,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testWhiteLabelReturnsTheSameWhiteLabel() {
+    public function testWhiteLabelReturnsTheSameWhiteLabel()
+    {
         $appKey = "APP_KEY";
         $secretKey = "SECRET_KEY";
         $privateKey = $this->getPrivateKey();
@@ -77,7 +83,16 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    protected function getPrivateKey() {
+    public function testEventDispatcherIsAnEventDispatcher()
+    {
+        $this->assertInstanceOf(
+            '\LaunchKey\SDK\Service\EventDispatcher',
+            Client::factory("key", 'secret', $this->getPrivateKey())->eventDispatcher()
+        );
+    }
+
+    protected function getPrivateKey()
+    {
         static $key;
         if (!$key) {
             $key = file_get_contents(__DIR__ . "/__fixtures/private_key.pem");
@@ -85,7 +100,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         return $key;
     }
 
-    protected function getOtherPrivateKey() {
+    protected function getOtherPrivateKey()
+    {
         static $key;
         if (!$key) {
             $key = file_get_contents(__DIR__ . "/__fixtures/other_private_key.pem");

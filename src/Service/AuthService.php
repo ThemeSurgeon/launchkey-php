@@ -15,5 +15,5 @@ interface AuthService
 
     public function deOrbit($authRequestId);
 
-    public function handleCallback(array $formData);
+    public function handleCallback(array $postData);
 }
