@@ -16,6 +16,8 @@ use LaunchKey\SDK\Domain\PingResponse;
 interface PingService
 {
     /**
+     * Execute a ping request.
+     *
      * @return PingResponse
      */
     public function ping();

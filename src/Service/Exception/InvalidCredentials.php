@@ -4,7 +4,7 @@
  * @copyright 2015 LaunchKey, Inc. See project license for usage.
  */
 
-namespace LaunchKey\SDK\Exception;
+namespace LaunchKey\SDK\Service\Exception;
 
 /**
  * Exception for errors that occur when communicating with the LaunchKey Engine API

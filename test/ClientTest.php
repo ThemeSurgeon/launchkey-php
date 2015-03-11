@@ -8,6 +8,7 @@ namespace LaunchKey\SDK\Test;
 
 
 use LaunchKey\SDK\Client;
+use LaunchKey\SDK\Config;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,16 +16,6 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      * Client
      */
     private $client;
-
-    protected function setUp()
-    {
-        $this->client = Client::factory("APP_KEY", "SECRET_KEY", $this->getPrivateKey());
-    }
-
-    protected function tearDown()
-    {
-        $this->client = null;
-    }
 
     public function testFactoryWithSameParametersReturnsTheSameAuth()
     {
@@ -83,12 +74,74 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $actual);
     }
 
-    public function testEventDispatcherIsAnEventDispatcher()
+    public function testEventDispatcherDefaultsToSynchronousLocalEventDispatcher()
     {
         $this->assertInstanceOf(
-            '\LaunchKey\SDK\Service\EventDispatcher',
+            '\LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher',
             Client::factory("key", 'secret', $this->getPrivateKey())->eventDispatcher()
         );
+    }
+
+    public function testEventDispatcherUsesObjectInConfigWhenPresent()
+    {
+        $config = new Config();
+        $eventDispatcher = \Phake::mock('LaunchKey\SDK\EventDispatcher\EventDispatcher');
+        $config->setEventDispatcher($eventDispatcher);
+        $client = Client::factory(uniqid("testEventDispatcherUsesObjectInConfigWhenPresent", true), $config);
+        $this->assertSame($eventDispatcher, $client->eventDispatcher());
+    }
+
+    public function testEventDispatcherUsesClassNameWhenPresentInConfig()
+    {
+        $config = new Config();
+        $config->setEventDispatcher('LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher');
+        $client = Client::factory(uniqid("testEventDispatcherUsesClassNameWhenPresentInConfig", true), $config);
+        $this->assertInstanceOf('LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher', $client->eventDispatcher());
+    }
+
+    public function testFactoryAppKeyInConfigIsTreatedTheSameAsAppKeyParameter()
+    {
+        $appKey = uniqid("testFactoryAppKeyInConfigIsTreatedTheSameAsAppKeyParameter");
+        $config = new Config();
+        $expected = Client::factory($appKey, "SECRET", $this->getPrivateKey());
+        $config->setAppKey($appKey)
+            ->setSecretKey("SECRET")
+            ->setPrivateKey($this->getPrivateKey());
+        $actual = Client::factory($config);
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter()
+    {
+        $appKey = uniqid("testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter");
+        $secretKey = uniqid("testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter");
+        $config = new Config();
+        $config->setSecretKey($secretKey)
+            ->setPrivateKey($this->getPrivateKey());
+        $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
+        $actual = Client::factory($appKey, $config);
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter()
+    {
+        $appKey = uniqid("testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter");
+        $secretKey = uniqid("testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter");
+        $config = new Config();
+        $config->setPrivateKey($this->getPrivateKey());
+        $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
+        $actual = Client::factory($appKey, $secretKey, $config);
+        $this->assertSame($expected, $actual);
+    }
+
+    protected function setUp()
+    {
+        $this->client = Client::factory("APP_KEY", "SECRET_KEY", $this->getPrivateKey());
+    }
+
+    protected function tearDown()
+    {
+        $this->client = null;
     }
 
     protected function getPrivateKey()

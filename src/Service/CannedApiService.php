@@ -8,6 +8,7 @@ namespace LaunchKey\SDK\Service;
 
 use LaunchKey\SDK\Domain\AuthorizationRequest;
 use LaunchKey\SDK\Domain\AuthorizationResponse;
+use LaunchKey\SDK\Domain\WhiteLabelUser;
 
 /**
  * Service that will return canned responses to API requests
@@ -58,5 +59,18 @@ class CannedApiService implements ApiService
     public function log($action, $status)
     {
         // TODO: Implement log() method.
+    }
+
+    /**
+     * Create a white label user with the following identifier
+     *
+     * @param $identifier Unique and permanent identifier for the user in the white label application.  This identifier
+     * will be used in all future communications regarding this user.  As such, it cannot ever change.
+     *
+     * @return WhiteLabelUser
+     */
+    public function createWhiteLabelUser($identifier)
+    {
+        // TODO: Implement createWhiteLabelUser() method.
     }
 }

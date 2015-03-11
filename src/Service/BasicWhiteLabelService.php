@@ -8,8 +8,11 @@ namespace LaunchKey\SDK\Service;
 
 
 use LaunchKey\SDK\Domain\WhiteLabelUser;
+use LaunchKey\SDK\EventDispatcher\EventDispatcher;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 
-class BasicWhiteLabelService implements WhiteLabelService
+class BasicWhiteLabelService implements WhiteLabelService, LoggerAwareInterface
 {
     /**
      * @var CryptService
@@ -19,7 +22,7 @@ class BasicWhiteLabelService implements WhiteLabelService
     /**
      * @var ApiService
      */
-    private $httpService;
+    private $apiService;
 
     /**
      * @var EventDispatcher
@@ -27,14 +30,29 @@ class BasicWhiteLabelService implements WhiteLabelService
     private $eventDispatcher;
 
     /**
+     * @var PingService
+     */
+    private $pingService;
+
+    /**
+     * @var LoggerAwareInterface
+     */
+    private $logger;
+
+    /**
      * @param CryptService $cryptService
-     * @param ApiService $httpService
+     * @param ApiService $apiService
+     * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
      */
-    public function __construct(CryptService $cryptService, ApiService $httpService, EventDispatcher $eventDispatcher)
+    public function __construct(
+        ApiService $apiService,
+        PingService $pingService,
+        EventDispatcher $eventDispatcher
+    )
     {
-        $this->cryptService = $cryptService;
-        $this->httpService = $httpService;
+        $this->apiService = $apiService;
+        $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -43,15 +61,23 @@ class BasicWhiteLabelService implements WhiteLabelService
      * @return WhiteLabelUser
      */
     public function createUser($identifier) {
+        if ($this->logger) $this->logger->debug(
+            "Initiating white label user create request",
+            array("identifier" => $identifier)
+        );
 
+        //$user = $this->apiService->createWhiteLabelUser($identifier);
+        if ($this->logger) $this->logger->debug("White label user creates", array("user" => $user));
     }
 
     /**
-     * Set the event dispatcher
-     * @param EventDispatcher $eventDispatcher
+     * Sets a logger instance on the object
+     *
+     * @param LoggerInterface $logger
+     * @return null
      */
-    public function setEventDispatcher(EventDispatcher $eventDispatcher)
+    public function setLogger(LoggerInterface $logger)
     {
-        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 }

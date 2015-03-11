@@ -4,35 +4,24 @@
  * @copyright 2015 LaunchKey, Inc. See project license for usage.
  */
 
-namespace LaunchKey\SDK\Service;
+namespace LaunchKey\SDK\EventDispatcher;
 
 
 use LaunchKey\SDK\Event\Event;
 
-class SynchronousLocalEventDispatcher implements EventDispatcher
+/**
+ * Interface EventDispatcher
+ * @package LaunchKey\SDK\Service
+ */
+interface EventDispatcher
 {
-    private $subscriptions = array();
-
     /**
      * Dispatch the event to all subscribers that have subscribed to the provided event name.
      *
      * @param string $eventName Name of the event.
      * @param Event $event
      */
-    public function dispatchEvent($eventName, Event $event)
-    {
-        $subscriptionPriorities = isset($this->subscriptions[$eventName]) ? $this->subscriptions[$eventName] : null;
-        if ($subscriptionPriorities) {
-            krsort($subscriptionPriorities);
-            array_walk($subscriptionPriorities, function (array $subscriptions)use ($event, $eventName)  {
-                array_walk($subscriptions, function ($callable) use ($event, $eventName) {
-                    if (!$event->isPropagationStopped()) {
-                        call_user_func($callable, $eventName, $event);
-                    }
-                });
-            });
-        }
-    }
+    public function dispatchEvent($eventName, Event $event);
 
     /**
      * @param string $eventName Name of the event
@@ -42,8 +31,5 @@ class SynchronousLocalEventDispatcher implements EventDispatcher
      * @param integer Priority of the callable for the event name.  Higher priority will executed before lower priority.
      * callables with the same priority cannot be guaranteed to execute in the order in which they are added.
      */
-    public function subscribe($eventName, $callable, $priority = 0)
-    {
-        $this->subscriptions[$eventName][$priority][] = $callable;
-    }
+    public function subscribe($eventName, $callable, $priority);
 }

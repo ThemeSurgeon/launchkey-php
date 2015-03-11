@@ -9,6 +9,7 @@ namespace LaunchKey\SDK\Service;
 
 use LaunchKey\SDK\Domain\AuthorizationRequest;
 use LaunchKey\SDK\Domain\AuthorizationResponse;
+use LaunchKey\SDK\Domain\WhiteLabelUser;
 
 interface ApiService
 {
@@ -42,4 +43,14 @@ interface ApiService
      * @param $status
      */
     public function log($action, $status);
+
+    /**
+     * Create a white label user with the following identifier
+     *
+     * @param $identifier Unique and permanent identifier for the user in the white label application.  This identifier
+     * will be used in all future communications regarding this user.  As such, it cannot ever change.
+     *
+     * @return WhiteLabelUser
+     */
+    public function createWhiteLabelUser($identifier);
 }

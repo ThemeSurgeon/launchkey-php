@@ -9,7 +9,7 @@ namespace LaunchKey\SDK\Test\EventDispatcher;
 
 use LaunchKey\SDK\Event\AbstractEvent;
 use LaunchKey\SDK\Event\Event;
-use LaunchKey\SDK\Service\SynchronousLocalEventDispatcher;
+use LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher;
 use Phake;
 
 class SynchronousLocalEventDispatcherTest extends \PHPUnit_Framework_TestCase
