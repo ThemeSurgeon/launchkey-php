@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
  *
  * @package LaunchKey\SDK\Service
  */
-class CachingPingService implements PingService, LoggerAwareInterface
+class CachingPingService implements PingService
 {
 
     private static $key = "launchkey-ping-service-cache";
@@ -41,11 +41,12 @@ class CachingPingService implements PingService, LoggerAwareInterface
      */
     private $ttl;
 
-    function __construct(PingService $pingService, Cache $cache, $ttl)
+    function __construct(PingService $pingService, Cache $cache, $ttl, LoggerInterface $logger = null)
     {
         $this->pingService = $pingService;
         $this->cache = $cache;
         $this->ttl = $ttl;
+        $this->logger = $logger;
     }
 
     /**
@@ -76,17 +77,6 @@ class CachingPingService implements PingService, LoggerAwareInterface
             }
         }
         return $response;
-    }
-
-    /**
-     * Sets a logger instance on the object
-     *
-     * @param LoggerInterface $logger
-     * @return null
-     */
-    public function setLogger(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
     }
 
     /**

@@ -30,7 +30,6 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
     private $pingService;
 
     /**
-     * @Mock
      * @var PingResponse
      */
     private $pingResponse;
@@ -58,10 +57,23 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
      */
     private $whitelabelService;
 
+
+    public function testCreateUserCallsPingService()
+    {
+        $this->whitelabelService->createUser(null);
+        \Phake::verify($this->pingService)->ping();
+    }
+
+    public function testCreatePassesPublicKeyFromPingToApiService()
+    {
+        $this->whitelabelService->createUser(null);
+        \Phake::verify($this->apiService->createWhiteLabelUser($this->anything(), $this->pingResponse->getPublicKey()));
+    }
+
     public function testCreateUserCallsApiServiceWithIdentifier()
     {
         $this->whitelabelService->createUser("identifier");
-        \Phake::verify($this->apiService)->createWhiteLabelUser("identifier");
+        \Phake::verify($this->apiService)->createWhiteLabelUser("identifier", $this->anything());
     }
 
     public function testCreatUserReturnsUserFromApiService()
@@ -75,26 +87,38 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
         $this->whitelabelService->createUser("identifier");
         $name = $event = null;
         \Phake::verify($this->eventDispatcher)->dispatchEvent(\Phake::capture($name), \Phake::capture($event));
-        $this->assertEquals("launchkey.white-label.user-created", $name, "Unexpected event name");
-        $this->assertInstanceOf('\LaunchKey\SDK\Event\WhiteLabelUserCreated', $event, "Unexpected event type");
+        $this->assertEquals("launchkey.whitelabel.user.created", $name, "Unexpected event name");
+        $this->assertInstanceOf('\LaunchKey\SDK\Event\WhiteLabelUserCreatedEvent', $event, "Unexpected event type");
         $this->assertSame($this->whiteLabelUser, $event->getWhiteLabelUser(), "Unexpected white label user in event");
+    }
+
+    public function testLoggerLogsDebugWhenAdded()
+    {
+        $this->whitelabelService = new BasicWhiteLabelService(
+            $this->apiService,
+            $this->pingService,
+            $this->eventDispatcher,
+            $this->logger
+        );
+        $this->whitelabelService->createUser("identifier");
+        \Phake::verify($this->logger, \Phake::atLeast(1))->debug(\Phake::anyParameters());
     }
 
     protected function setUp()
     {
-        $this->markTestSkipped("Code not ready");
         \Phake::initAnnotations($this);
         \Phake::when($this->apiService)
             ->createWhiteLabelUser(\Phake::anyParameters())
             ->thenReturn($this->whiteLabelUser);
+        $this->pingResponse = new PingResponse(new \DateTime("-10 minutes"), "public key", new \DateTime("-20 minutes"));
         \Phake::when($this->pingService)
             ->ping()
             ->thenReturn($this->pingResponse);
 
         $this->whitelabelService = new BasicWhiteLabelService(
-            $this->pingService,
             $this->apiService,
-            $this->evenDispatcher
+            $this->pingService,
+            $this->eventDispatcher
         );
     }
 

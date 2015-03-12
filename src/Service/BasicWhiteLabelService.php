@@ -6,13 +6,17 @@
 
 namespace LaunchKey\SDK\Service;
 
-
 use LaunchKey\SDK\Domain\WhiteLabelUser;
+use LaunchKey\SDK\Event\WhiteLabelUserCreatedEvent;
 use LaunchKey\SDK\EventDispatcher\EventDispatcher;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
-class BasicWhiteLabelService implements WhiteLabelService, LoggerAwareInterface
+/**
+ * Service for interacting with the LaunchKey Engine regarding White Label Groups
+ * @package LaunchKey\SDK\Service
+ */
+class BasicWhiteLabelService implements WhiteLabelService
 {
     /**
      * @var CryptService
@@ -40,20 +44,22 @@ class BasicWhiteLabelService implements WhiteLabelService, LoggerAwareInterface
     private $logger;
 
     /**
-     * @param CryptService $cryptService
      * @param ApiService $apiService
      * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
+     * @param LoggerInterface $logger
      */
     public function __construct(
         ApiService $apiService,
         PingService $pingService,
-        EventDispatcher $eventDispatcher
+        EventDispatcher $eventDispatcher,
+        LoggerInterface $logger = null
     )
     {
         $this->apiService = $apiService;
         $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 
     /**
@@ -65,19 +71,10 @@ class BasicWhiteLabelService implements WhiteLabelService, LoggerAwareInterface
             "Initiating white label user create request",
             array("identifier" => $identifier)
         );
-
-        //$user = $this->apiService->createWhiteLabelUser($identifier);
+        $pingResponse = $this->pingService->ping();
+        $user = $this->apiService->createWhiteLabelUser($identifier, $pingResponse->getPublicKey());
         if ($this->logger) $this->logger->debug("White label user creates", array("user" => $user));
-    }
-
-    /**
-     * Sets a logger instance on the object
-     *
-     * @param LoggerInterface $logger
-     * @return null
-     */
-    public function setLogger(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
+        $this->eventDispatcher->dispatchEvent(WhiteLabelUserCreatedEvent::NAME, new WhiteLabelUserCreatedEvent($user));
+        return $user;
     }
 }

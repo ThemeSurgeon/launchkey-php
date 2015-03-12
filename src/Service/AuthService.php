@@ -5,7 +5,8 @@
  */
 namespace LaunchKey\SDK\Service;
 
-use LaunchKey\SDK\Domain\AuthorizationResponse;
+use LaunchKey\SDK\Domain\AuthRequest;
+use LaunchKey\SDK\Domain\AuthResponse;
 
 interface AuthService
 {
@@ -13,7 +14,7 @@ interface AuthService
      * Authorize a transaction for the provided username
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
-     * @return AuthorizationResponse
+     * @return AuthRequest
      */
     public function authorize($username);
 
@@ -21,7 +22,7 @@ interface AuthService
      * Request a user session for the provided username
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
-     * @return AuthorizationResponse
+     * @return AuthResponse
      */
     public function authenticate($username);
 
@@ -30,9 +31,9 @@ interface AuthService
      * successfully authenticate to determine if the user has submitted a de-orbit request and authorization
      * for a session has been revoked.
      *
-     * @param string $authRequestId ID from the AuthorizationResponse object returned from a previous authorize
+     * @param string $authRequestId ID from the AuthResponse object returned from a previous authorize
      * or authenticate call.
-     * @return AuthorizationResponse
+     * @return AuthResponse
      */
     public function getStatus($authRequestId);
 

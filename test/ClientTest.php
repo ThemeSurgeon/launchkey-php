@@ -6,132 +6,94 @@
 
 namespace LaunchKey\SDK\Test;
 
-
 use LaunchKey\SDK\Client;
 use LaunchKey\SDK\Config;
+use LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher;
+use Phake;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Client
+     * @var Client
      */
     private $client;
 
-    public function testFactoryWithSameParametersReturnsTheSameAuth()
+    public function testFactoryReturnsClient()
     {
-        $appKey = "APP_KEY";
-        $secretKey = "SECRET_KEY";
-        $privateKey = $this->getPrivateKey();
-        $expected = Client::factory($appKey, $secretKey, $privateKey);
-        $actual = Client::factory($appKey, $secretKey, $privateKey);
-        $this->assertSame($expected, $actual);
+        $this->assertInstanceOf('LaunchKey\SDK\Client', $this->client);
     }
 
-    public function testFactoryMethodWithDifferentAppKeysReturnsDifferentAuth()
+    public function testFactoryReturnsClientWithValidAuth()
     {
-        $secretKey = "SECRET_KEY";
-        $privateKey = $this->getPrivateKey();
-        $expected = Client::factory("APP_KEY_ONE", $secretKey, $privateKey);
-        $actual = Client::factory("APP_KEY_TWO", $secretKey, $privateKey);
-        $this->assertNotSame($expected, $actual);
+        $this->assertInstanceOf('LaunchKey\SDK\Service\AuthService', $this->client->auth());
     }
 
-    public function testFactoryMethodWithDifferentSecretKeysReturnsDifferentAuth()
+    public function testFactoryReturnsClientWithValidWhiteLabelService()
     {
-        $appKey = "APP_KEY";
-        $privateKey = $this->getPrivateKey();
-        $expected = Client::factory($appKey, "SECRET_KEY_ONE", $privateKey);
-        $actual = Client::factory($appKey, "SECRET_KEY_TWO", $privateKey);
-        $this->assertNotSame($expected, $actual);
+        $this->assertInstanceOf('LaunchKey\SDK\Service\WhiteLabelService', $this->client->whiteLabel());
     }
 
-    public function testFactoryMethodWithDifferentPublicKeysReturnsDifferentAuth()
-    {
-        $appKey = "APP_KEY";
-        $secretKey = "SECRET_KEY";
-        $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
-        $actual = Client::factory($appKey, $secretKey, $this->getOtherPrivateKey());
-        $this->assertNotSame($expected, $actual);
-    }
-
-    public function testAuthReturnsTheSameAuth()
-    {
-        $appKey = "APP_KEY";
-        $secretKey = "SECRET_KEY";
-        $privateKey = $this->getPrivateKey();
-        $expected = Client::factory($appKey, $secretKey, $privateKey)->auth();
-        $actual = Client::factory($appKey, $secretKey, $privateKey)->auth();
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testWhiteLabelReturnsTheSameWhiteLabel()
-    {
-        $appKey = "APP_KEY";
-        $secretKey = "SECRET_KEY";
-        $privateKey = $this->getPrivateKey();
-        $expected = Client::factory($appKey, $secretKey, $privateKey)->whiteLabel();
-        $actual = Client::factory($appKey, $secretKey, $privateKey)->whiteLabel();
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testEventDispatcherDefaultsToSynchronousLocalEventDispatcher()
-    {
-        $this->assertInstanceOf(
-            '\LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher',
-            Client::factory("key", 'secret', $this->getPrivateKey())->eventDispatcher()
-        );
-    }
-
-    public function testEventDispatcherUsesObjectInConfigWhenPresent()
+    public function testFactoryConfigForAppKeyIgnoresAllOtherParameters()
     {
         $config = new Config();
-        $eventDispatcher = \Phake::mock('LaunchKey\SDK\EventDispatcher\EventDispatcher');
-        $config->setEventDispatcher($eventDispatcher);
-        $client = Client::factory(uniqid("testEventDispatcherUsesObjectInConfigWhenPresent", true), $config);
-        $this->assertSame($eventDispatcher, $client->eventDispatcher());
+        Client::factory($config, "SECRET", "private key");
+        $this->assertNull($config->getAppKey(), "Unexpected App Key Value");
+        $this->assertNull($config->getSecretKey(), "Unexpected Secret Key Value");
+        $this->assertNull($config->getPrivateKey(), "Unexpected Private Key Value");
     }
 
-    public function testEventDispatcherUsesClassNameWhenPresentInConfig()
+    public function testFactoryConfigForSecretKeyOverridesAppKeyAndIgnoresAllOtherParameters()
     {
         $config = new Config();
-        $config->setEventDispatcher('LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher');
-        $client = Client::factory(uniqid("testEventDispatcherUsesClassNameWhenPresentInConfig", true), $config);
-        $this->assertInstanceOf('LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher', $client->eventDispatcher());
+        Client::factory("APP KEY", $config, "private key");
+        $this->assertEquals("APP KEY", $config->getAppKey());
+        $this->assertNull($config->getSecretKey(), "Unexpected Secret Key Value");
+        $this->assertNull($config->getPrivateKey(), "Unexpected Private Key Value");
     }
 
-    public function testFactoryAppKeyInConfigIsTreatedTheSameAsAppKeyParameter()
+    public function testFactoryConfigForPrivateKeyOverridesAppKeyAndSecretKeyAndIgnoresAllOtherParameters()
     {
-        $appKey = uniqid("testFactoryAppKeyInConfigIsTreatedTheSameAsAppKeyParameter");
         $config = new Config();
-        $expected = Client::factory($appKey, "SECRET", $this->getPrivateKey());
-        $config->setAppKey($appKey)
-            ->setSecretKey("SECRET")
-            ->setPrivateKey($this->getPrivateKey());
-        $actual = Client::factory($config);
-        $this->assertSame($expected, $actual);
+        Client::factory("APP KEY", "SECRET KEY", $config);
+        $this->assertEquals("APP KEY", $config->getAppKey());
+        $this->assertEquals("SECRET KEY", $config->getSecretKey());
+        $this->assertNull($config->getPrivateKey(), "Unexpected Private Key Value");
     }
 
-    public function testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter()
+    public function testFactoryConfigForPrivateKeyOverridesAll()
     {
-        $appKey = uniqid("testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter");
-        $secretKey = uniqid("testFactorySecretKeyInConfigIsTreatedTheSameAsSecretKeyParameter");
         $config = new Config();
-        $config->setSecretKey($secretKey)
-            ->setPrivateKey($this->getPrivateKey());
-        $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
-        $actual = Client::factory($appKey, $config);
-        $this->assertSame($expected, $actual);
+        Client::factory("APP KEY", "SECRET KEY", "PRIVATE KEY", $config);
+        $this->assertEquals("APP KEY", $config->getAppKey());
+        $this->assertEquals("SECRET KEY", $config->getSecretKey());
+        $this->assertEquals("PRIVATE KEY", $config->getPrivateKey());
     }
 
-    public function testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter()
+    public function testSettingConfigLoggerSetsTheLogger()
     {
-        $appKey = uniqid("testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter");
-        $secretKey = uniqid("testFactoryPrivateKeyKeyInConfigIsTreatedTheSameAsPublicKeyParameter");
         $config = new Config();
-        $config->setPrivateKey($this->getPrivateKey());
-        $expected = Client::factory($appKey, $secretKey, $this->getPrivateKey());
-        $actual = Client::factory($appKey, $secretKey, $config);
-        $this->assertSame($expected, $actual);
+        $logger = \Phake::mock('Psr\Log\LoggerInterface');
+        $config->setLogger($logger);
+        $client = Client::factory($config);
+        $this->assertEquals($logger, $client->getLogger());
+    }
+
+    public function testSettingConfigCacheSetsTheCache()
+    {
+        $config = new Config();
+        $cache = \Phake::mock('\LaunchKey\SDK\Cache\Cache');
+        $config->setCache($cache);
+        $client = Client::factory($config);
+        $this->assertEquals($cache, $client->getCache());
+    }
+
+    public function testFactorySetsTheEventDispatcher()
+    {
+        $expected = new SynchronousLocalEventDispatcher();
+        $config = new Config();
+        $config->setEventDispatcher($expected);
+        $client = Client::factory($config);
+        $this->assertSame($expected, $client->eventDispatcher());
     }
 
     protected function setUp()

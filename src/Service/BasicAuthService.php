@@ -7,20 +7,25 @@
 namespace LaunchKey\SDK\Service;
 
 
-use LaunchKey\SDK\Domain\AuthorizationResponse;
+use LaunchKey\SDK\Domain\AuthRequest;
+use LaunchKey\SDK\Domain\AuthResponse;
+use LaunchKey\SDK\Domain\DeOrbitCallback;
+use LaunchKey\SDK\Domain\DeOrbitRequest;
+use LaunchKey\SDK\Event\AuthRequestEvent;
+use LaunchKey\SDK\Event\AuthResponseEvent;
+use LaunchKey\SDK\Event\DeOrbitCallbackEvent;
+use LaunchKey\SDK\Event\DeOrbitRequestEvent;
 use LaunchKey\SDK\EventDispatcher\EventDispatcher;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 
 class BasicAuthService implements AuthService
 {
-    /**
-     * @var CryptService
-     */
-    private $cryptService;
 
     /**
      * @var ApiService
      */
-    private $httpService;
+    private $apiService;
 
     /**
      * @var EventDispatcher
@@ -28,44 +33,49 @@ class BasicAuthService implements AuthService
     private $eventDispatcher;
 
     /**
-     * @param CryptService $cryptService
-     * @param ApiService $httpService
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param ApiService $apiService
      * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        CryptService $cryptService,
-        ApiService $httpService,
+        ApiService $apiService,
         PingService $pingService,
-        EventDispatcher $eventDispatcher
+        EventDispatcher $eventDispatcher,
+        LoggerInterface $logger = null
     )
     {
-        $this->cryptService = $cryptService;
-        $this->httpService = $httpService;
+        $this->apiService = $apiService;
         $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 
     /**
      * Authorize a transaction for the provided username
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
-     * @return AuthorizationResponse
+     * @return AuthRequest
      */
     public function authorize($username)
     {
-        // TODO: Implement authorize() method.
+        return $this->auth($username, false);
     }
 
     /**
      * Request a user session for the provided username
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
-     * @return AuthorizationResponse
+     * @return AuthResponse
      */
     public function authenticate($username)
     {
-        // TODO: Implement authenticate() method.
+        return $this->auth($username, true);
     }
 
     /**
@@ -73,13 +83,24 @@ class BasicAuthService implements AuthService
      * successfully authenticate to determine if the user has submitted a de-orbit request and authorization
      * for a session has been revoked.
      *
-     * @param string $authRequestId ID from the AuthorizationResponse object returned from a previous authorize
+     * @param string $authRequestId ID from the AuthResponse object returned from a previous authorize
      * or authenticate call.
-     * @return AuthorizationResponse
+     * @return AuthResponse
      */
     public function getStatus($authRequestId)
     {
-        // TODO: Implement getStatus() method.
+        $publicKey = $this->pingService->ping()->getPublicKey();
+        if ($this->logger) $this->logger->debug("Sending poll request", array("authRequestId" => $authRequestId));
+        $authResponse = $this->apiService->poll($authRequestId, $publicKey);
+        if ($this->logger) $this->logger->debug("poll response received", array("response" => $authResponse));
+        try {
+            $this->processAuthResponse($authResponse, $publicKey);
+        } catch (\Exception $e) {
+            if ($this->logger) {
+                $this->logger->error("Error logging Authentication true", array("Exception" => $e));
+            }
+        }
+        return $authResponse;
     }
 
     /**
@@ -92,7 +113,13 @@ class BasicAuthService implements AuthService
      */
     public function deOrbit($authRequestId)
     {
-        // TODO: Implement deOrbit() method.
+        $publicKey = $this->pingService->ping()->getPublicKey();
+        if ($this->logger) $this->logger->debug("Logging Revoke true", array("authRequestId" => $authRequestId));
+        $this->apiService->log($authRequestId, "Revoke", true, $publicKey);
+        $this->eventDispatcher->dispatchEvent(
+            DeOrbitRequestEvent::NAME,
+            new DeOrbitRequestEvent(new DeOrbitRequest($authRequestId))
+        );
     }
 
     /**
@@ -104,6 +131,49 @@ class BasicAuthService implements AuthService
      */
     public function handleCallback(array $postData)
     {
-        // TODO: Implement handleCallback() method.
+        if ($this->logger) $this->logger->debug("Handling callback", array("data" => $postData));
+        $response = $this->apiService->handleCallback($postData);
+        if ($response instanceof DeOrbitCallback) {
+            if ($this->logger) $this->logger->debug("De-orbit callback determined", array("data" => $response));
+            $this->eventDispatcher->dispatchEvent(DeOrbitCallbackEvent::NAME, new DeOrbitCallbackEvent($response));
+        } elseif ($response instanceof AuthResponse) {
+            if ($this->logger) $this->logger->debug("Auth callback determined", array("data" => $response));
+            $this->processAuthResponse($response);
+        }
+    }
+
+    /**
+     * @param $username
+     * @return AuthRequest
+     */
+    private function auth($username, $session)
+    {
+        if ($this->logger) {
+            $this->logger->debug(
+                "Sending auth request", array("username" => $username, "session" => $session)
+            );
+        }
+        $authRequest = $this->apiService->auth($username, $session, $this->pingService->ping()->getPublicKey());
+        $this->eventDispatcher->dispatchEvent(AuthRequestEvent::NAME, new AuthRequestEvent($authRequest));
+        if ($this->logger) {
+            $this->logger->debug("auth response received", array("response" => $authRequest));
+        }
+        return $authRequest;
+    }
+
+    /**
+     * @param AuthResponse $authResponse
+     * @param string $publicKey
+     */
+    private function processAuthResponse(AuthResponse $authResponse, $publicKey = null)
+    {
+        $this->eventDispatcher->dispatchEvent(AuthResponseEvent::NAME, new AuthResponseEvent($authResponse));
+        if ($authResponse->isAuthorized()) {
+            if ($this->logger) {
+                $this->logger->debug("Logging Authenticate true");
+            }
+            $publicKey = $publicKey ? $publicKey : $this->pingService->ping()->getPublicKey();
+            $this->apiService->log($authResponse->getAuthRequestId(), "Authenticate", true, $publicKey);
+        }
     }
 }

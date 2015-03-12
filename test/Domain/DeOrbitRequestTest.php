@@ -18,7 +18,7 @@ class DeOrbitRequestTest extends \PHPUnit_Framework_TestCase
 
     public function testRequestId()
     {
-        $this->assertEquals("AuthRequest", $this->object->getRequestId());
+        $this->assertEquals("AuthRequest", $this->object->getAuthRequestId());
     }
 
     protected function setUp()

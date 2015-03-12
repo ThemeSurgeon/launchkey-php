@@ -9,10 +9,10 @@ namespace LaunchKey\SDK\Service\Exception;
 /**
  * Exception for errors that occur when communicating with the LaunchKey Engine API
  *
- * Class InvalidCredentials
+ * Class InvalidCredentialsError
  * @package LaunchKey\SDK\Exception
  */
-class InvalidCredentials extends Exception
+class InvalidCredentialsError extends Exception
 {
     // This part left intentionally blank
 }

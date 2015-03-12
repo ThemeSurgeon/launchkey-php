@@ -11,7 +11,7 @@ namespace LaunchKey\SDK\Domain;
  *
  * @package LaunchKey\SDK\Domain
  */
-class AuthorizationRequest
+class AuthRequest
 {
     /**
      * @var string User name or internal identifier for the authorization request.  Internal identifiers are used for

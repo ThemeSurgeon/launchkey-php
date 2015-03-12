@@ -7,18 +7,18 @@
 namespace LaunchKey\SDK\Test\Domain;
 
 
-use LaunchKey\SDK\Domain\AuthorizationResponse;
+use LaunchKey\SDK\Domain\AuthResponse;
 
-class AuthorizationResponseTest extends \PHPUnit_Framework_TestCase
+class AuthResponseTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var AuthorizationResponse
+     * @var AuthResponse
      */
     private $entity;
 
     protected function setUp()
     {
-        $this->entity = new AuthorizationResponse("ID", "UserHash", "OrganizationUserID", "UserPushID");
+        $this->entity = new AuthResponse("ID", "UserHash", "OrganizationUserID", "UserPushID");
     }
 
     protected function tearDown()
@@ -28,7 +28,7 @@ class AuthorizationResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testId()
     {
-        $this->assertEquals("ID", $this->entity->getId());
+        $this->assertEquals("ID", $this->entity->getAuthRequestId());
     }
 
     public function testUserHash()
@@ -43,7 +43,7 @@ class AuthorizationResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testIsCompleted()
     {
-        $entity = new AuthorizationResponse(null, null, null, null, true);
+        $entity = new AuthResponse(null, null, null, null, true);
         $this->assertTrue($entity->isCompleted());
     }
 
@@ -64,7 +64,7 @@ class AuthorizationResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testIsAuthorized()
     {
-        $entity = new AuthorizationResponse(null, null, null, null, null, true);
+        $entity = new AuthResponse(null, null, null, null, null, true);
         $this->assertTrue($entity->isAuthorized());
     }
 }

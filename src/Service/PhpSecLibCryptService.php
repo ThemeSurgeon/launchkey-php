@@ -7,6 +7,8 @@
 namespace LaunchKey\SDK\Service;
 
 
+use Psr\Log\LoggerInterface;
+
 class PhpSecLibCryptService implements CryptService
 {
     /**

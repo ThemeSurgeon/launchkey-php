@@ -36,18 +36,23 @@ class Config
     private $privateKey;
 
     /**
+     * @var string
+     */
+    private $privateKeyPassword;
+
+    /**
      * App key for an application
      * @var string
      */
     private $appKey;
 
     /**
-     * @var string|Cache\Cache
+     * @var Cache\Cache
      */
     private $cache;
 
     /**
-     * @var string|EventDispatcher\EventDispatcher
+     * @var EventDispatcher\EventDispatcher
      */
     private $eventDispatcher;
 
@@ -55,6 +60,16 @@ class Config
      * @var LoggerInterface
      */
     private $logger;
+
+    /**
+     * @var string
+     */
+    private $apiEndpoint = "https://api.launchkey.com/v1";
+
+    /**
+     * @var int
+     */
+    private $apiTimeout = 60;
 
     /**
      * Get the number of seconds a ping response will be cached.
@@ -123,6 +138,24 @@ class Config
     }
 
     /**
+     * @return string
+     */
+    public function getPrivateKeyPassword()
+    {
+        return $this->privateKeyPassword;
+    }
+
+    /**
+     * @param string $privateKeyPassword
+     * @return $this
+     */
+    public function setPrivateKeyPassword($privateKeyPassword)
+    {
+        $this->privateKeyPassword = $privateKeyPassword;
+        return $this;
+    }
+
+    /**
      * Set the location of the file that contains the private key of the RSA private/public key pair for the
      * organization or application.
      *
@@ -174,32 +207,38 @@ class Config
      */
     public function getCache()
     {
+        if (!$this->cache) {
+            $this->cache = new Cache\MemoryCache();
+        }
         return $this->cache;
     }
 
     /**
-     * @param Cache\Cache|string $cache
+     * @param Cache\Cache $cache
      * @return $this
      */
-    public function setCache($cache)
+    public function setCache(Cache\Cache $cache)
     {
         $this->cache = $cache;
         return $this;
     }
 
     /**
-     * @return EventDispatcher\EventDispatcher|string
+     * @return EventDispatcher\EventDispatcher
      */
     public function getEventDispatcher()
     {
+        if (!$this->eventDispatcher) {
+            $this->eventDispatcher = new EventDispatcher\SynchronousLocalEventDispatcher();
+        }
         return $this->eventDispatcher;
     }
 
     /**
-     * @param EventDispatcher\EventDispatcher|string $eventDispatcher
+     * @param EventDispatcher\EventDispatcher $eventDispatcher
      * @return $this
      */
-    public function setEventDispatcher($eventDispatcher)
+    public function setEventDispatcher(EventDispatcher\EventDispatcher $eventDispatcher)
     {
         $this->eventDispatcher = $eventDispatcher;
         return $this;
@@ -217,9 +256,45 @@ class Config
      * @param LoggerInterface $logger
      * @return $this
      */
-    public function setLogger($logger)
+    public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiEndpoint()
+    {
+        return $this->apiEndpoint;
+    }
+
+    /**
+     * @param string $apiEndpoint
+     * @return $this
+     */
+    public function setApiEndpoint($apiEndpoint)
+    {
+        $this->apiEndpoint = $apiEndpoint;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getApiTimeout()
+    {
+        return $this->apiTimeout;
+    }
+
+    /**
+     * @param int $apiTimeout
+     * @return $this
+     */
+    public function setApiTimeout($apiTimeout)
+    {
+        $this->apiTimeout = $apiTimeout;
         return $this;
     }
 }

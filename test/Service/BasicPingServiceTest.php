@@ -83,6 +83,14 @@ class BasicPingServiceTest extends \PHPUnit_Framework_TestCase
         $this->pingService->ping();
     }
 
+    public function testPingServiceDebugLogsWhenLoggerIsPresent()
+    {
+        $logger = \Phake::mock('\Psr\Log\LoggerInterface');
+        $pingService = new BasicPingService($this->apiService, $this->eventDispatcher, $logger);
+        $pingService->ping();
+        \Phake::verify($logger, \Phake::atLeast(1))->debug(\Phake::anyParameters());
+    }
+
     protected function setUp()
     {
         \Phake::initAnnotations($this);

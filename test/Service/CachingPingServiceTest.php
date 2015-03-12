@@ -45,6 +45,11 @@ class CachingPingServiceTest extends \PHPUnit_Framework_TestCase
     private $cachingPingService;
 
     /**
+     * @var CachingPingService
+     */
+    private $loggingCachingPingService;
+
+    /**
      * @Mock
      * @var LoggerInterface
      */
@@ -114,9 +119,8 @@ class CachingPingServiceTest extends \PHPUnit_Framework_TestCase
 
     public function testCacheErrorOnGetLogsWhenLoggerIsPresent()
     {
-        $this->cachingPingService->setLogger($this->logger);
         \Phake::when($this->cache)->get(\Phake::anyParameters())->thenThrow(new CacheError());
-        $this->cachingPingService->ping();
+        $this->loggingCachingPingService->ping();
         \Phake::verify($this->logger)->error(\Phake::anyParameters());
     }
 
@@ -129,9 +133,8 @@ class CachingPingServiceTest extends \PHPUnit_Framework_TestCase
 
     public function testCacheErrorOnSetLogsWhenLoggerIsPresent()
     {
-        $this->cachingPingService->setLogger($this->logger);
         \Phake::when($this->cache)->set(\Phake::anyParameters())->thenThrow(new CacheError());
-        $this->cachingPingService->ping();
+        $this->loggingCachingPingService->ping();
         \Phake::verify($this->logger)->error(\Phake::anyParameters());
     }
 
@@ -148,6 +151,7 @@ class CachingPingServiceTest extends \PHPUnit_Framework_TestCase
         \Phake::initAnnotations($this);
         $this->ttl = 999;
         $this->cachingPingService = new CachingPingService($this->pingService, $this->cache, $this->ttl);
+        $this->loggingCachingPingService = new CachingPingService($this->pingService, $this->cache, $this->ttl, $this->logger);
         $this->pingResponse = new PingResponse(new \DateTime("-10 minutes"), "Key", new \DateTime("-20 minutes"));
         \Phake::when($this->pingService)->ping()->thenReturn($this->pingResponse);
     }

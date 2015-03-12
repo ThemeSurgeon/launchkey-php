@@ -69,14 +69,34 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->config->setPrivateKeyLocation('file://' . __DIR__ . '/__invalid_location__');
     }
 
-    public function testSetGetCache()
+    public function testGetEventDispatcherDefaultsToSynchronousLocalEventDispatcher()
     {
-        $this->assertEquals("cache", $this->config->setCache("cache")->getCache());
+        $this->assertInstanceOf(
+            '\LaunchKey\SDK\EventDispatcher\SynchronousLocalEventDispatcher',
+            $this->config->getEventDispatcher()
+        );
     }
 
     public function testSetGetEventDispatcher()
     {
-        $this->assertEquals("ed", $this->config->setEventDispatcher("ed")->getEventDispatcher());
+        $config = new Config();
+        $eventDispatcher = \Phake::mock('LaunchKey\SDK\EventDispatcher\EventDispatcher');
+        $config->setEventDispatcher($eventDispatcher);
+        $this->assertSame($eventDispatcher, $config->getEventDispatcher());
+    }
+
+    public function testGetCacheDefaultsToMemoryCache()
+    {
+        $config = new Config();
+        $this->assertInstanceOf('\LaunchKey\SDK\Cache\MemoryCache', $config->getCache());
+    }
+
+    public function testSetGetCache()
+    {
+        $config = new Config();
+        $cache = \Phake::mock('LaunchKey\SDK\Cache\Cache');
+        $config->setCache($cache);
+        $this->assertSame($cache, $config->getCache());
     }
 
     public function testSetGetLogger()
@@ -85,6 +105,30 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($log, $this->config->setLogger($log)->getLogger());
     }
 
+    public function testSetGetApiEndPoint()
+    {
+        $this->assertEquals("endpoint", $this->config->setApiEndpoint("endpoint")->getApiEndpoint());
+    }
+
+    public function testGetApiEndpointDefaultsToProduction()
+    {
+        $this->assertEquals("https://api.launchkey.com/v1", $this->config->getApiEndpoint());
+    }
+
+    public function testSetGetPrivateKeyPassword()
+    {
+        $this->assertEquals("password", $this->config->setPrivateKeyPassword("password")->getPrivateKeyPassword());
+    }
+
+    public function testSetGetApiTimeout()
+    {
+        $this->assertEquals(999, $this->config->setApiTimeout(999)->getApiTimeout());
+    }
+
+    public function testGetApiTimeoutDefaultsTo60()
+    {
+        $this->assertEquals(60, $this->config->getApiTimeout());
+    }
 
     protected function setUp()
     {

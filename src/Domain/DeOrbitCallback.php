@@ -7,7 +7,7 @@
 namespace LaunchKey\SDK\Domain;
 
 
-class DeOrbitResponse
+class DeOrbitCallback
 {
     /**
      * @var \DateTime When the de-orbit occurred

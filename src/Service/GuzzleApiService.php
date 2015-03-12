@@ -7,6 +7,7 @@
 namespace LaunchKey\SDK\Service;
 
 
+use GuzzleHttp\Client;
 use LaunchKey\SDK\Domain\AuthRequest;
 use LaunchKey\SDK\Domain\AuthResponse;
 use LaunchKey\SDK\Domain\DeOrbitCallback;
@@ -17,14 +18,39 @@ use LaunchKey\SDK\Service\Exception\InvalidCredentialsError;
 use LaunchKey\SDK\Service\Exception\InvalidRequestError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
 
-interface ApiService
+class GuzzleApiService implements ApiService
 {
+    /**
+     * @var Client
+     */
+    private $guzzle;
+
+    /**
+     * @var CryptService
+     */
+    private $cryptService;
+
+    /**
+     * @param $guzzle
+     * @param CryptService $cryptService
+     */
+    public function __construct(
+        Client $guzzle,
+        CryptService $cryptService
+    ) {
+        $this->guzzle = $guzzle;
+        $this->cryptService = $cryptService;
+    }
+
     /**
      * Perform a ping request
      * @return PingResponse
      * @throws CommunicationError If there was an error communicating with the endpoint
      */
-    public function ping();
+    public function ping()
+    {
+        // TODO: Implement ping() method.
+    }
 
     /**
      * Perform an "auth" request
@@ -37,7 +63,10 @@ interface ApiService
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function auth($username, $session, $publicKey);
+    public function auth($username, $session, $publicKey)
+    {
+        // TODO: Implement auth() method.
+    }
 
     /**
      * Poll to see if the auth request is completed and approved/denied
@@ -49,7 +78,10 @@ interface ApiService
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function poll($authRequest, $publicKey);
+    public function poll($authRequest, $publicKey)
+    {
+        // TODO: Implement poll() method.
+    }
 
     /**
      * Update the LaunchKey Engine with the current status of the auth request or user session
@@ -60,7 +92,10 @@ interface ApiService
      * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return  If there was an error communicating with the endpoint
      */
-    public function log($authRequest, $action, $status, $publicKey);
+    public function log($authRequest, $action, $status, $publicKey)
+    {
+        // TODO: Implement log() method.
+    }
 
     /**
      * Create a white label user with the following identifier
@@ -74,7 +109,10 @@ interface ApiService
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function createWhiteLabelUser($identifier, $publicKey);
+    public function createWhiteLabelUser($identifier, $publicKey)
+    {
+        // TODO: Implement createWhiteLabelUser() method.
+    }
 
     /**
      * Handle a LaunchKey engine callback with the provided post data
@@ -84,6 +122,8 @@ interface ApiService
      * @throws InvalidRequestError when the signature is invalid
      * @throws UnknownCallbackActionError when the callback type could not be determined by the data provided
      */
-    public function handleCallback(array $postData);
-
+    public function handleCallback(array $postData)
+    {
+        // TODO: Implement handleCallback() method.
+    }
 }

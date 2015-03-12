@@ -7,12 +7,12 @@
 namespace LaunchKey\SDK\Test\Domain;
 
 
-use LaunchKey\SDK\Domain\AuthorizationRequest;
+use LaunchKey\SDK\Domain\AuthRequest;
 
-class AuthorizationRequestTest extends \PHPUnit_Framework_TestCase
+class AuthRequestTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var AuthorizationRequest
+     * @var AuthRequest
      */
     private $authorizationRequest;
 
@@ -28,13 +28,13 @@ class AuthorizationRequestTest extends \PHPUnit_Framework_TestCase
 
     public function testIsUserSession()
     {
-        $authorizationRequest = new AuthorizationRequest("username", true);
+        $authorizationRequest = new AuthRequest("username", true);
         $this->assertTrue($authorizationRequest->isUserSession());
     }
 
     protected function setUp()
     {
-        $this->authorizationRequest = new AuthorizationRequest("username");
+        $this->authorizationRequest = new AuthRequest("username");
     }
 
     protected function tearDown()

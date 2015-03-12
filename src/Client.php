@@ -6,8 +6,10 @@
 
 namespace LaunchKey\SDK;
 
-use LaunchKey\SDK\Service\BasicPingService;
-use LaunchKey\SDK\Service\CachingPingService;
+use GuzzleHttp\Event\BeforeEvent;
+use GuzzleHttp\Event\CompleteEvent;
+use GuzzleHttp\Event\ErrorEvent;
+use Psr\Log\LoggerInterface;
 
 /**
  * LaunchKey SDK Client
@@ -21,12 +23,7 @@ use LaunchKey\SDK\Service\CachingPingService;
 class Client
 {
     /**
-     * @var self
-     */
-    private static $instances = array();
-
-    /**
-     * @var AuthService
+     * @var Service\AuthService
      */
     private $auth;
 
@@ -36,22 +33,40 @@ class Client
     private $whiteLabel;
 
     /**
-     * @var Service\EventDispatcher
+     * @var EventDispatcher\EventDispatcher
      */
     private $eventDispatcher;
 
     /**
-     * @param Config $config
+     * @var Cache\Cache
      */
-    private function __construct(Config $config)
-    {
-        $this->eventDispatcher = $this->getEventDispatcher($config);
-        $cryptService = $this->getCryptService($config);
-        $apiService = $this->getApiService($config);
-        $pingService = $this->getPingService($config, $apiService, $this->eventDispatcher);
-        $this->auth = new Service\BasicAuthService($cryptService, $apiService, $pingService, $this->eventDispatcher);
-        $this->whiteLabel =
-            new Service\BasicWhiteLabelService($apiService, $pingService, $this->eventDispatcher);
+    private $cache;
+
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param Service\AuthService $authService
+     * @param Service\WhiteLabelService $whiteLabelService
+     * @param EventDispatcher\EventDispatcher $eventDispatcher
+     * @param Cache\Cache $cache
+     * @param \Psr\Log\LoggerInterface $logger
+     */
+    public function __construct(
+        Service\AuthService $authService,
+        Service\WhiteLabelService $whiteLabelService,
+        EventDispatcher\EventDispatcher $eventDispatcher,
+        Cache\Cache $cache,
+        \Psr\Log\LoggerInterface $logger = null
+    ) {
+        $this->eventDispatcher = $eventDispatcher;
+        $this->auth = $authService;
+        $this->whiteLabel = $whiteLabelService;
+        $this->cache = $cache;
+        $this->logger = $logger;
+        $this->cache = $cache;
     }
 
     /**
@@ -74,9 +89,40 @@ class Client
      * @param string|Config|null $secretKey
      * @param string|Config|null $privateKey
      * @param Config|null $config
-     * @return Client
+     * @return self
      */
     public static function factory($appKey, $secretKey = null, $privateKey = null, Config $config = null)
+    {
+        $config = self::getUpdatedConfig($appKey, $secretKey, $privateKey, $config);
+        $cache = $config->getCache();
+        $logger = $config->getLogger();
+        $eventDispatcher = $config->getEventDispatcher();
+
+        $cryptService = new Service\PhpSecLibCryptService($config->getPrivateKey(), $config->getPrivateKeyPassword());
+        $apiService = self::getGuzzleApiService(
+            $config->getApiEndpoint(),
+            $config->getApiTimeout(),
+            $cryptService,
+            $logger
+        );
+
+        $innerPingService = new Service\BasicPingService($apiService, $eventDispatcher, $logger);
+        $pingService = new Service\CachingPingService($innerPingService, $cache, $config->getPingTTL(), $logger);
+
+        $authService = new Service\BasicAuthService($apiService, $pingService, $eventDispatcher, $logger);
+        $whiteLabelService = new Service\BasicWhiteLabelService($apiService, $pingService, $eventDispatcher, $logger);
+
+        return new self($authService, $whiteLabelService, $eventDispatcher, $cache, $logger);
+    }
+
+    /**
+     * @param $appKey
+     * @param $secretKey
+     * @param $privateKey
+     * @param Config $config
+     * @return Config
+     */
+    private static function getUpdatedConfig($appKey, $secretKey, $privateKey, $config)
     {
         if ($appKey instanceof Config) {
             $config = $appKey;
@@ -95,11 +141,58 @@ class Client
             $config->setSecretKey($secretKey);
             $config->setPrivateKey($privateKey);
         }
-        $hash = md5(sprintf('%s|%s|%s', $config->getAppKey(), $config->getSecretKey(), $config->getPrivateKey()));
-        if (!isset(static::$instances[$hash])) {
-            static::$instances[$hash] = new self($config);
+
+        return $config;
+    }
+
+    /**
+     * @param $endpoint
+     * @param $timeout
+     * @param Service\CryptService $cryptService
+     * @param LoggerInterface $logger
+     * @return Service\GuzzleApiService
+     */
+    private static function getGuzzleApiService(
+        $endpoint,
+        $timeout,
+        Service\CryptService $cryptService,
+        LoggerInterface $logger = null
+    ) {
+        $guzzle = new \GuzzleHttp\Client(array(
+            'base_url' => $endpoint,
+            'defaults' => array(
+                "timeout" => $timeout,
+                "connect_timeout" => $timeout,
+            )
+        ));
+
+        if ($logger) {
+            $guzzle->getEmitter()->on('before', function (BeforeEvent $event) use ($logger) {
+                $logger->debug("Guzzle preparing to send request", array("request" => $event->getRequest()));
+            });
+            $guzzle->getEmitter()->on('complete', function (CompleteEvent $event) use ($logger) {
+                $logger->debug(
+                    "Guzzle equest completed",
+                    array("request" => $event->getRequest(), "response" => $event->getResponse())
+                );
+            });
+            $guzzle->getEmitter()->on('error', function (ErrorEvent $event) use ($logger) {
+                $logger->debug(
+                    "Guzzle request encountered an error",
+                    array(
+                        "request" => $event->getRequest(),
+                        "response" => $event->getResponse(),
+                        "exception" => $event->getException()
+                    )
+                );
+            });
         }
-        return static::$instances[$hash];
+
+        $apiService = new Service\GuzzleApiService(
+            $guzzle,
+            $cryptService
+        );
+        return $apiService;
     }
 
     /**
@@ -107,7 +200,7 @@ class Client
      */
     public function auth()
     {
-        $this->auth;
+        return $this->auth;
     }
 
     /**
@@ -115,11 +208,11 @@ class Client
      */
     public function whiteLabel()
     {
-        $this->whiteLabel;
+        return $this->whiteLabel;
     }
 
     /**
-     * @return Service\EventDispatcher
+     * @return EventDispatcher\EventDispatcher
      */
     public function eventDispatcher()
     {
@@ -127,58 +220,18 @@ class Client
     }
 
     /**
-     * @param $config
-     * @return Service\ApiService
+     * @return Cache\Cache
      */
-    private function getApiService(Config $config)
+    public function getCache()
     {
-        return new Service\CannedApiService();
+        return $this->cache;
     }
 
     /**
-     * @param Config $config
-     * @return Service\CryptService
+     * @return \Psr\Log\LoggerInterface
      */
-    private function getCryptService(Config $config)
+    public function getLogger()
     {
-        return new Service\PhpSecLibCryptService($config->getPrivateKey());
-    }
-
-    /**
-     * @param Config $config
-     * @param Service\ApiService $apiService
-     * @return Service\PingService
-     */
-    private function getPingService(Config $config, Service\ApiService $apiService, EventDispatcher\EventDispatcher $eventDispatcher)
-    {
-        $configCache = $config->getCache();
-        if ($configCache instanceof Cache\Cache) {
-            $cache = $configCache;
-        } elseif (!empty($configCache)) {
-            $cache = new $configCache();
-        } else {
-            $cache = new Cache\MemoryCache();
-        }
-
-        $pingService = new BasicPingService($apiService, $eventDispatcher);
-        $decorator = new CachingPingService($pingService, $cache, $config->getPingTTL());
-        if ($logger = $config->getLogger()) {
-            $pingService->setLogger($logger);
-            $decorator->setLogger($logger);
-        }
-        return $decorator;
-    }
-
-    private function getEventDispatcher(Config $config)
-    {
-        $configDispatcher = $config->getEventDispatcher();
-        if ($configDispatcher instanceof EventDispatcher\EventDispatcher) {
-            $dispatcher = $configDispatcher;
-        } elseif (!empty($configDispatcher)) {
-            $dispatcher = new $configDispatcher();
-        } else {
-            $dispatcher = new EventDispatcher\SynchronousLocalEventDispatcher();
-        }
-        return $dispatcher;
+        return $this->logger;
     }
 }
