@@ -69,7 +69,12 @@ class Config
     /**
      * @var int
      */
-    private $apiTimeout = 60;
+    private $apiRequestTimeout = 0;
+
+    /**
+     * @var int
+     */
+    private $apiConnectTimeout = 0;
 
     /**
      * Get the number of seconds a ping response will be cached.
@@ -283,18 +288,36 @@ class Config
     /**
      * @return int
      */
-    public function getApiTimeout()
+    public function getApiRequestTimeout()
     {
-        return $this->apiTimeout;
+        return $this->apiRequestTimeout;
     }
 
     /**
-     * @param int $apiTimeout
+     * @param int $apiRequestTimeout
      * @return $this
      */
-    public function setApiTimeout($apiTimeout)
+    public function setApiRequestTimeout($apiRequestTimeout)
     {
-        $this->apiTimeout = $apiTimeout;
+        $this->apiRequestTimeout = $apiRequestTimeout;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getApiConnectTimeout()
+    {
+        return $this->apiConnectTimeout;
+    }
+
+    /**
+     * @param int $apiConnectTimeout
+     * @return $this
+     */
+    public function setApiConnectTimeout($apiConnectTimeout)
+    {
+        $this->apiConnectTimeout = $apiConnectTimeout;
         return $this;
     }
 }

@@ -6,9 +6,6 @@
 
 namespace LaunchKey\SDK;
 
-use GuzzleHttp\Event\BeforeEvent;
-use GuzzleHttp\Event\CompleteEvent;
-use GuzzleHttp\Event\ErrorEvent;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -101,7 +98,8 @@ class Client
         $cryptService = new Service\PhpSecLibCryptService($config->getPrivateKey(), $config->getPrivateKeyPassword());
         $apiService = self::getGuzzleApiService(
             $config->getApiEndpoint(),
-            $config->getApiTimeout(),
+            $config->getApiConnectTimeout(),
+            $config->getApiRequestTimeout(),
             $cryptService,
             $logger
         );
@@ -147,50 +145,40 @@ class Client
 
     /**
      * @param $endpoint
-     * @param $timeout
+     * @param int $connectTimeout
+     * @param int $requestTimeout
      * @param Service\CryptService $cryptService
      * @param LoggerInterface $logger
      * @return Service\GuzzleApiService
      */
     private static function getGuzzleApiService(
         $endpoint,
-        $timeout,
+        $connectTimeout,
+        $requestTimeout,
         Service\CryptService $cryptService,
         LoggerInterface $logger = null
     ) {
-        $guzzle = new \GuzzleHttp\Client(array(
-            'base_url' => $endpoint,
-            'defaults' => array(
-                "timeout" => $timeout,
-                "connect_timeout" => $timeout,
+        $guzzle = new \Guzzle\Http\Client($endpoint, array(
+            "redirect.disable" => true,
+            'request.options' => array(
+                "timeout" => $requestTimeout,
+                "connect_timeout" => $connectTimeout,
             )
         ));
 
         if ($logger) {
-            $guzzle->getEmitter()->on('before', function (BeforeEvent $event) use ($logger) {
-                $logger->debug("Guzzle preparing to send request", array("request" => $event->getRequest()));
-            });
-            $guzzle->getEmitter()->on('complete', function (CompleteEvent $event) use ($logger) {
-                $logger->debug(
-                    "Guzzle equest completed",
-                    array("request" => $event->getRequest(), "response" => $event->getResponse())
-                );
-            });
-            $guzzle->getEmitter()->on('error', function (ErrorEvent $event) use ($logger) {
-                $logger->debug(
-                    "Guzzle request encountered an error",
-                    array(
-                        "request" => $event->getRequest(),
-                        "response" => $event->getResponse(),
-                        "exception" => $event->getException()
-                    )
-                );
-            });
+            $guzzle->getEventDispatcher()->addListener(
+                \Guzzle\Http\Client::CREATE_REQUEST,
+                function (\Guzzle\Common\Event $event) use ($logger) {
+                    $logger->debug("Guzzle preparing to send request", $event->toArray());
+                }
+            );
         }
 
         $apiService = new Service\GuzzleApiService(
             $guzzle,
-            $cryptService
+            $cryptService,
+            $logger
         );
         return $apiService;
     }

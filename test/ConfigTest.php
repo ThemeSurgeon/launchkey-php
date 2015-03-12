@@ -120,14 +120,24 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("password", $this->config->setPrivateKeyPassword("password")->getPrivateKeyPassword());
     }
 
-    public function testSetGetApiTimeout()
+    public function testSetGetApiRequestTimeout()
     {
-        $this->assertEquals(999, $this->config->setApiTimeout(999)->getApiTimeout());
+        $this->assertEquals(999, $this->config->setApiRequestTimeout(999)->getApiRequestTimeout());
     }
 
-    public function testGetApiTimeoutDefaultsTo60()
+    public function testGetApiRequestTimeoutDefaultsTo0()
     {
-        $this->assertEquals(60, $this->config->getApiTimeout());
+        $this->assertEquals(0, $this->config->getApiRequestTimeout());
+    }
+
+    public function testSetGetApiConnectTimeout()
+    {
+        $this->assertEquals(999, $this->config->setApiConnectTimeout(999)->getApiConnectTimeout());
+    }
+
+    public function testGetApiConnectTimeoutDefaultsTo0()
+    {
+        $this->assertEquals(0, $this->config->getApiRequestTimeout());
     }
 
     protected function setUp()

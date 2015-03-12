@@ -7,7 +7,7 @@
 namespace LaunchKey\SDK\Service;
 
 
-use GuzzleHttp\Client;
+use Guzzle\Http\Client;
 use LaunchKey\SDK\Domain\AuthRequest;
 use LaunchKey\SDK\Domain\AuthResponse;
 use LaunchKey\SDK\Domain\DeOrbitCallback;
@@ -17,6 +17,7 @@ use LaunchKey\SDK\Service\Exception\CommunicationError;
 use LaunchKey\SDK\Service\Exception\InvalidCredentialsError;
 use LaunchKey\SDK\Service\Exception\InvalidRequestError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
+use Psr\Log\LoggerInterface;
 
 class GuzzleApiService implements ApiService
 {
@@ -31,15 +32,14 @@ class GuzzleApiService implements ApiService
     private $cryptService;
 
     /**
-     * @param $guzzle
+     * @param Client $guzzle
      * @param CryptService $cryptService
+     * @param Logger $logger
      */
-    public function __construct(
-        Client $guzzle,
-        CryptService $cryptService
-    ) {
+    public function __construct(Client $guzzle, CryptService $cryptService, LoggerInterface $logger = null) {
         $this->guzzle = $guzzle;
         $this->cryptService = $cryptService;
+        $this->logger = $logger;
     }
 
     /**

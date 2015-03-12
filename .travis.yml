@@ -8,7 +8,7 @@ php:
 
 env:
   matrix:
-  - GUZZLE_VERSION=~5.0
+  - GUZZLE_VERSION=~3.0
   - GUZZLE_VERSION=dev-master
 
 matrix:
