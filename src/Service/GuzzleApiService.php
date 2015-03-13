@@ -236,8 +236,12 @@ class GuzzleApiService implements ApiService
         $original = error_reporting(E_ERROR);
         $data = json_decode($response->getBody(true), true);
         error_reporting($original);
-        if (json_last_error()) {
-            throw new InvalidResponseError("Unable to parse body as JSON: " . json_last_error_msg());
+        if (!$data) {
+            $msg = "Unable to parse body as JSON";
+            if (function_exists("json_last_error_msg")) {
+                $msg += ": " . json_last_error_msg();
+            }
+            throw new InvalidResponseError($msg);
         }
         return $data;
     }
