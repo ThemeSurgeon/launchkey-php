@@ -89,7 +89,33 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
         Phake::verify($this->apiService)->auth(
             $this->anything(),
             $this->anything(),
+            $this->anything(),
+            $this->anything(),
             $this->pingResponse->getPublicKey()
+        );
+    }
+
+    public function testAuthorizePassesAppKeyToApiService()
+    {
+        $this->authService->authorize(null);
+        Phake::verify($this->apiService)->auth(
+            $this->anything(),
+            $this->anything(),
+            "APP KEY",
+            $this->anything(),
+            $this->anything()
+        );
+    }
+
+    public function testAuthorizePassesSecretKeyToApiService()
+    {
+        $this->authService->authorize(null);
+        Phake::verify($this->apiService)->auth(
+            $this->anything(),
+            $this->anything(),
+            $this->anything(),
+            "SECRET KEY",
+            $this->anything()
         );
     }
 
@@ -98,6 +124,8 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
         $this->authService->authorize("username");
         Phake::verify($this->apiService)->auth(
             "username",
+            $this->anything(),
+            $this->anything(),
             $this->anything(),
             $this->anything()
         );
@@ -109,6 +137,8 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
         Phake::verify($this->apiService)->auth(
             $this->anything(),
             false,
+            $this->anything(),
+            $this->anything(),
             $this->anything()
         );
     }
@@ -155,15 +185,43 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
         Phake::verify($this->apiService)->auth(
             $this->anything(),
             $this->anything(),
+            $this->anything(),
+            $this->anything(),
             $this->pingResponse->getPublicKey()
         );
    }
+
+    public function testAuthenticatePassesAppKeyToApiServiceAuth()
+    {
+        $this->authService->authenticate("username");
+        Phake::verify($this->apiService)->auth(
+            $this->anything(),
+            $this->anything(),
+            "APP KEY",
+            $this->anything(),
+            $this->anything()
+        );
+    }
+
+    public function testAuthenticatePassesSecretKeyToApiServiceAuth()
+    {
+        $this->authService->authenticate("username");
+        Phake::verify($this->apiService)->auth(
+            $this->anything(),
+            $this->anything(),
+            $this->anything(),
+            "SECRET KEY",
+            $this->anything()
+        );
+    }
 
     public function testAuthenticatePassesUsernameToApiServiceAuth()
     {
         $this->authService->authenticate("username");
         Phake::verify($this->apiService)->auth(
             "username",
+            $this->anything(),
+            $this->anything(),
             $this->anything(),
             $this->anything()
         );
@@ -175,6 +233,8 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
         Phake::verify($this->apiService)->auth(
             $this->anything(),
             true,
+            $this->anything(),
+            $this->anything(),
             $this->anything()
         );
     }
@@ -424,8 +484,16 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         Phake::initAnnotations($this);
-        $this->authService = new BasicAuthService($this->apiService, $this->pingService, $this->eventDispatcher);
+        $this->authService = new BasicAuthService(
+            "APP KEY",
+            "SECRET KEY",
+            $this->apiService,
+            $this->pingService,
+            $this->eventDispatcher
+        );
         $this->loggingAuthService = new BasicAuthService(
+            "APP KEY",
+            "SECRET KEY",
             $this->apiService,
             $this->pingService,
             $this->eventDispatcher,

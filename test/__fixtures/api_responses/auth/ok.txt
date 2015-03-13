@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 12 Mar 2015 16:55:12 GMT
+Content-Type: application/json; charset=UTF-8
+Content-Length: 35
+Connection: close
+
+{"auth_request": "Auth Request ID"}

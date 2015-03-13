@@ -67,13 +67,19 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
     public function testCreatePassesPublicKeyFromPingToApiService()
     {
         $this->whitelabelService->createUser(null);
-        \Phake::verify($this->apiService->createWhiteLabelUser($this->anything(), $this->pingResponse->getPublicKey()));
+        \Phake::verify($this->apiService->createWhiteLabelUser($this->anything(), $this->anything(), $this->pingResponse->getPublicKey()));
+    }
+
+    public function testCreatePassesAppKeyToApiService()
+    {
+        $this->whitelabelService->createUser(null);
+        \Phake::verify($this->apiService->createWhiteLabelUser($this->anything(), "APP KEY", $this->anything()));
     }
 
     public function testCreateUserCallsApiServiceWithIdentifier()
     {
         $this->whitelabelService->createUser("identifier");
-        \Phake::verify($this->apiService)->createWhiteLabelUser("identifier", $this->anything());
+        \Phake::verify($this->apiService)->createWhiteLabelUser("identifier", $this->anything(), $this->anything());
     }
 
     public function testCreatUserReturnsUserFromApiService()
@@ -95,6 +101,7 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
     public function testLoggerLogsDebugWhenAdded()
     {
         $this->whitelabelService = new BasicWhiteLabelService(
+            "APP KEY",
             $this->apiService,
             $this->pingService,
             $this->eventDispatcher,
@@ -116,6 +123,7 @@ class BasicWhiteLabelServiceTest extends \PHPUnit_Framework_TestCase
             ->thenReturn($this->pingResponse);
 
         $this->whitelabelService = new BasicWhiteLabelService(
+            "APP KEY",
             $this->apiService,
             $this->pingService,
             $this->eventDispatcher

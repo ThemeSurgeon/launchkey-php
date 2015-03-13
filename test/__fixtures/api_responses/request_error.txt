@@ -1,0 +1,8 @@
+HTTP/1.1 400 Bad Request
+Server: nginx
+Date: Thu, 12 Mar 2015 16:55:12 GMT
+Content-Type: application/json; charset=UTF-8
+Content-Length: 169
+Connection: close
+
+{"successful": false, "status_code": 400, "message": {"username": "Invalid character used. Do not use &gt; &lt; ) ( @ : ; &amp;"}, "message_code": 40421, "response": ""}

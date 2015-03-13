@@ -25,15 +25,21 @@ class AuthRequest
     private $userSession;
 
     /**
-     * @param string $username  LaunchKey user name for the authorization request.  Internal identifiers are used for
-     * white label applications.
-     * @param bool $userSession Is the authorization request for a user session as opposed to a transaction.  Defaults
-     * to FALSE.
+     * @var string auth_request value from LaunchKey API "auths" post
      */
-    function __construct($username, $userSession = false)
+    private $authRequestId;
+
+    /**
+     * @param string $username LaunchKey user name for the authorization request.  Internal identifiers are used for
+     * white label applications.
+     * @param bool $userSession Is the authorization request for a user session as opposed to a transaction.
+     * @param string $authRequestId auth_request value from LaunchKey API "auths" post
+     */
+    function __construct($username, $userSession, $authRequestId)
     {
         $this->username = $username;
         $this->userSession = $userSession;
+        $this->authRequestId = $authRequestId;
     }
 
     /**
@@ -51,5 +57,15 @@ class AuthRequest
     public function isUserSession()
     {
         return $this->userSession;
+    }
+
+    /**
+     * Get the auth_request value from LaunchKey API "auths" post
+     *
+     * @return string
+     */
+    public function getAuthRequestId()
+    {
+        return $this->authRequestId;
     }
 }

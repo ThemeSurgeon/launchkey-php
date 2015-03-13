@@ -14,31 +14,30 @@ class AuthRequestTest extends \PHPUnit_Framework_TestCase
     /**
      * @var AuthRequest
      */
-    private $authorizationRequest;
+    private $authRequest;
 
     public function testUsername()
     {
-        $this->assertEquals("username", $this->authorizationRequest->getUsername());
-    }
-
-    public function testIsUserSessionDefaultsToFalse()
-    {
-        $this->assertFalse($this->authorizationRequest->isUserSession());
+        $this->assertEquals("username", $this->authRequest->getUsername());
     }
 
     public function testIsUserSession()
     {
-        $authorizationRequest = new AuthRequest("username", true);
-        $this->assertTrue($authorizationRequest->isUserSession());
+        $this->assertTrue($this->authRequest->isUserSession());
+    }
+
+    public function testAuthorizationRequestId()
+    {
+        $this->assertEquals("auth request", $this->authRequest->getAuthRequestId());
     }
 
     protected function setUp()
     {
-        $this->authorizationRequest = new AuthRequest("username");
+        $this->authRequest = new AuthRequest("username", true, "auth request");
     }
 
     protected function tearDown()
     {
-        $this->authorizationRequest = null;
+        $this->authRequest = null;
     }
 }

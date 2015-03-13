@@ -107,8 +107,21 @@ class Client
         $innerPingService = new Service\BasicPingService($apiService, $eventDispatcher, $logger);
         $pingService = new Service\CachingPingService($innerPingService, $cache, $config->getPingTTL(), $logger);
 
-        $authService = new Service\BasicAuthService($apiService, $pingService, $eventDispatcher, $logger);
-        $whiteLabelService = new Service\BasicWhiteLabelService($apiService, $pingService, $eventDispatcher, $logger);
+        $authService = new Service\BasicAuthService(
+            $config->getAppKey(),
+            $config->getSecretKey(),
+            $apiService,
+            $pingService,
+            $eventDispatcher,
+            $logger
+        );
+        $whiteLabelService = new Service\BasicWhiteLabelService(
+            $config->getAppKey(),
+            $apiService,
+            $pingService,
+            $eventDispatcher,
+            $logger
+        );
 
         return new self($authService, $whiteLabelService, $eventDispatcher, $cache, $logger);
     }

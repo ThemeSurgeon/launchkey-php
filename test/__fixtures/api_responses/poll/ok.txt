@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 12 Mar 2015 16:55:12 GMT
+Content-Type: application/json; charset=UTF-8
+Content-Length: 151
+Connection: close
+
+{"organization_user": "org user", "user_push_id": "user push id", "user_hash": "OAAo0w8B5DhrX74zxCMimztqBv16k7GY52sbRm4q3CZ", "auth": "Encrypted Auth"}

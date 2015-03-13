@@ -44,18 +44,26 @@ class BasicWhiteLabelService implements WhiteLabelService
     private $logger;
 
     /**
+     * @var string
+     */
+    private $appKey;
+
+    /**
+     * @param string $appKey App key from dashboard
      * @param ApiService $apiService
      * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
      * @param LoggerInterface $logger
      */
     public function __construct(
+        $appKey,
         ApiService $apiService,
         PingService $pingService,
         EventDispatcher $eventDispatcher,
         LoggerInterface $logger = null
     )
     {
+        $this->appKey = $appKey;
         $this->apiService = $apiService;
         $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
@@ -72,7 +80,7 @@ class BasicWhiteLabelService implements WhiteLabelService
             array("identifier" => $identifier)
         );
         $pingResponse = $this->pingService->ping();
-        $user = $this->apiService->createWhiteLabelUser($identifier, $pingResponse->getPublicKey());
+        $user = $this->apiService->createWhiteLabelUser($identifier, $this->appKey, $pingResponse->getPublicKey());
         if ($this->logger) $this->logger->debug("White label user creates", array("user" => $user));
         $this->eventDispatcher->dispatchEvent(WhiteLabelUserCreatedEvent::NAME, new WhiteLabelUserCreatedEvent($user));
         return $user;

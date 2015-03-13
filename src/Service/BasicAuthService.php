@@ -38,18 +38,34 @@ class BasicAuthService implements AuthService
     private $logger;
 
     /**
+     * @var string
+     */
+    private $appKey;
+
+    /**
+     * @var string
+     */
+    private $secretKey;
+
+    /**
+     * @param string $appKey App key from dashboard
+     * @param string $secretKey Application secret key from dashboard
      * @param ApiService $apiService
      * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
      * @param LoggerInterface $logger
      */
     public function __construct(
+        $appKey,
+        $secretKey,
         ApiService $apiService,
         PingService $pingService,
         EventDispatcher $eventDispatcher,
         LoggerInterface $logger = null
     )
     {
+        $this->appKey = $appKey;
+        $this->secretKey = $secretKey;
         $this->apiService = $apiService;
         $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
@@ -153,7 +169,13 @@ class BasicAuthService implements AuthService
                 "Sending auth request", array("username" => $username, "session" => $session)
             );
         }
-        $authRequest = $this->apiService->auth($username, $session, $this->pingService->ping()->getPublicKey());
+        $authRequest = $this->apiService->auth(
+            $username,
+            $session,
+            $this->appKey,
+            $this->secretKey,
+            $this->pingService->ping()->getPublicKey()
+        );
         $this->eventDispatcher->dispatchEvent(AuthRequestEvent::NAME, new AuthRequestEvent($authRequest));
         if ($this->logger) {
             $this->logger->debug("auth response received", array("response" => $authRequest));
