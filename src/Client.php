@@ -117,6 +117,7 @@ class Client
         );
         $whiteLabelService = new Service\BasicWhiteLabelService(
             $config->getAppKey(),
+            $config->getSecretKey(),
             $apiService,
             $pingService,
             $eventDispatcher,

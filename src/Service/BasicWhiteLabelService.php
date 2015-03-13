@@ -50,6 +50,7 @@ class BasicWhiteLabelService implements WhiteLabelService
 
     /**
      * @param string $appKey App key from dashboard
+     * @param string $secretKey Secret key for application from dashboard
      * @param ApiService $apiService
      * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
@@ -57,6 +58,7 @@ class BasicWhiteLabelService implements WhiteLabelService
      */
     public function __construct(
         $appKey,
+        $secretKey,
         ApiService $apiService,
         PingService $pingService,
         EventDispatcher $eventDispatcher,
@@ -64,6 +66,7 @@ class BasicWhiteLabelService implements WhiteLabelService
     )
     {
         $this->appKey = $appKey;
+        $this->secretKey = $secretKey;
         $this->apiService = $apiService;
         $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
@@ -80,7 +83,7 @@ class BasicWhiteLabelService implements WhiteLabelService
             array("identifier" => $identifier)
         );
         $pingResponse = $this->pingService->ping();
-        $user = $this->apiService->createWhiteLabelUser($identifier, $this->appKey, $pingResponse->getPublicKey());
+        $user = $this->apiService->createWhiteLabelUser($identifier, $this->appKey, $this->secretKey, $pingResponse->getPublicKey());
         if ($this->logger) $this->logger->debug("White label user creates", array("user" => $user));
         $this->eventDispatcher->dispatchEvent(WhiteLabelUserCreatedEvent::NAME, new WhiteLabelUserCreatedEvent($user));
         return $user;
