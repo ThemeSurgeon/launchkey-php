@@ -122,19 +122,38 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
     /**
      * @return EntityEnclosingRequestInterface
      */
-    protected function getGuzzleRequest()
+    protected function assertGuzzleRequest()
     {
         $requests = $this->guzzleMockPlugin->getReceivedRequests();
-        return empty($requests) ? null : $requests[0];
+        if (empty($requests)) {
+            throw new \PHPUnit_Framework_ExpectationFailedException("No Guzzle request to evaluate");
+        }
+        return $requests[0];
+    }
+
+    protected function assertGuzzleRequestPathEquals($expected)
+    {
+        $actual = $this->assertGuzzleRequest()->getPath();
+        $constraint = new \PHPUnit_Framework_Constraint_IsEqual($expected);
+        $constraint->evaluate(
+            $actual,
+            sprintf("Path \"%s\" did not equal \"%s\"", $actual, $expected)
+        );
+    }
+
+    protected function assertGuzzleRequestMethodEquals($expected)
+    {
+        $actual = $this->assertGuzzleRequest()->getMethod();
+        $constraint = new \PHPUnit_Framework_Constraint_IsEqual($expected, 0.0, 10, false, true);
+        $constraint->evaluate(
+            $actual,
+            sprintf("Method \"%s\" is not the same as \"%s\"", $actual, $expected)
+        );
     }
 
     protected function assertGuzzleRequestFormFieldValueEquals($field, $expected)
     {
-        $request = $this->getGuzzleRequest();
-        if (!$request) {
-            throw new \PHPUnit_Framework_ExpectationFailedException("No Guzzle request to evaluate");
-        }
-        $fields = $request->getPostFields()->toArray();
+        $fields = $this->assertGuzzleRequest()->getPostFields()->toArray();
         if (empty($fields)) {
             throw new \PHPUnit_Framework_ExpectationFailedException("No form data in request");
         }
@@ -151,11 +170,7 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
     }
 
     protected function assertGuzzleRequestHeaderStartsWith($header, $expected) {
-        $request = $this->getGuzzleRequest();
-        if (!$request) {
-            throw new \PHPUnit_Framework_ExpectationFailedException("No Guzzle request to evaluate");
-        }
-        $headerValue = $request->getHeader($header);
+        $headerValue = $this->assertGuzzleRequest()->getHeader($header);
         if (!$headerValue) {
             throw new \PHPUnit_Framework_ExpectationFailedException("Request has no header " . $header);
         }
@@ -179,7 +194,20 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
         }
     }
 
-    protected function assertLastItemEncryptedWasValidSecretKey() {
+    protected function assertGuzzleRequestQueryStringParameterEquals($parameter, $expected) {
+        $actual = $this->assertGuzzleRequest()->getQuery()->get($parameter);
+        if (!$actual) {
+            throw new \PHPUnit_Framework_ExpectationFailedException("Request has no query parameter " . $parameter);
+        }
+
+        $constraint = new \PHPUnit_Framework_Constraint_IsEqual($expected);
+        $constraint->evaluate(
+            $actual,
+            sprintf("Value for query parameter \"%s\" of \"%s\" is not equal to \"%s\"", $parameter, $expected, $actual)
+        );
+    }
+
+    protected function assertLastItemRsaEncryptedWasValidSecretKey() {
         $tz = new \DateTimeZone("UTC");
         $before = new \DateTime("now", $tz);
         $after = new \DateTime("now", $tz);

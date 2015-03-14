@@ -6,10 +6,163 @@
 
 namespace LaunchKey\SDK\Test\Service;
 
+use LaunchKey\SDK\Domain\WhiteLabelUser;
+
 class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstract
 {
-    public function setUp()
+    private $lkIdentifier = 'LK Identifier';
+
+    private $qrCodeUrl = 'QR Code URL';
+
+    private $code = 'Code';
+
+    public function testIsGetRequest()
     {
-        $this->markTestIncomplete("No tests yet");
+        $this->apiService->createWhiteLabelUser(null);
+        $this->assertGuzzleRequestMethodEquals("POST");
+    }
+
+    public function testUsesCorrectRelativePath()
+    {
+        $this->apiService->createWhiteLabelUser(null);
+        $this->assertGuzzleRequestPathEquals("/users");
+    }
+
+    public function testSendsApplicationJsonAsContentType()
+    {
+        $this->apiService->createWhiteLabelUser(null);
+        $this->assertGuzzleRequestHeaderStartsWith("content-type", "application/json");
+    }
+
+    public function testSendsSignatureInQueryString()
+    {
+        \Phake::when($this->cryptService)->sign(\Phake::anyParameters())->thenReturn("Expected Signature");
+        $this->apiService->createWhiteLabelUser(null);
+        $this->assertGuzzleRequestQueryStringParameterEquals("signature", "Expected Signature");
+    }
+
+    public function testSignsEntireBody()
+    {
+        $this->apiService->createWhiteLabelUser(null);
+        $body = (string) $this->assertGuzzleRequest()->getBody();
+        \Phake::verify($this->cryptService)->sign($body);
+    }
+
+    public function testSendsValidJsonObjectInBody()
+    {
+        $this->apiService->createWhiteLabelUser("Expected Identifier");
+        $decoded = json_decode($this->assertGuzzleRequest()->getBody(), true);
+        $this->assertInternalType('array', $decoded);
+        return $decoded;
+    }
+
+    /** @depends testSendsValidJsonObjectInBody */
+    public function testSendsIdentifierInBodyJson(array $jsonDecoded)
+    {
+        $this->assertArrayHasKey("identifier", $jsonDecoded);
+        $this->assertEquals("Expected Identifier", $jsonDecoded["identifier"]);
+    }
+
+    /** @depends testSendsValidJsonObjectInBody */
+    public function testSendsAppKeyInBodyJson(array $jsonDecoded)
+    {
+        $this->assertArrayHasKey("app_key", $jsonDecoded);
+        $this->assertEquals($this->appKey, $jsonDecoded["app_key"]);
+    }
+
+    /** @depends testSendsValidJsonObjectInBody */
+    public function testSendsEncryptedSecretKeyInBodyJson(array $jsonDecoded)
+    {
+        $this->assertArrayHasKey("secret_key", $jsonDecoded);
+        $this->assertEquals($this->rsaEncrypted, $jsonDecoded["secret_key"]);
+    }
+
+    public function testEncryptedCorrectDataForSecretKey()
+    {
+        $this->apiService->createWhiteLabelUser(null);
+        $this->assertLastItemRsaEncryptedWasValidSecretKey();
+    }
+
+    public function testDecryptsBodyDataCorrectly()
+    {
+        $this->apiService->createWhiteLabelUser(null);
+        \Phake::verify($this->cryptService)->decryptAES(
+            "Base64 Encoded Data",
+            "KeyKeyKeyKeyKeyKeyKeyKeyKeyKey32",
+            "IvIvIvIvIvIvIvIv"
+        );
+    }
+
+    public function testReturnsWhiteLabelUserAsResponse()
+    {
+        $actual = $this->apiService->createWhiteLabelUser(null);
+        $this->assertInstanceOf('\LaunchKey\SDK\Domain\WhiteLabelUser', $actual);
+        return $actual;
+    }
+
+    /** @depends testReturnsWhiteLabelUserAsResponse */
+    public function testSetsIdentifierCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
+    {
+        $this->assertEquals($this->lkIdentifier, $user->getIdentifier());
+    }
+
+    /** @depends testReturnsWhiteLabelUserAsResponse */
+    public function testSetsQrCodeCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
+    {
+        $this->assertEquals($this->qrCodeUrl, $user->getQrCodeUrl());
+    }
+
+    /** @depends testReturnsWhiteLabelUserAsResponse */
+    public function testSetsCodeCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
+    {
+        $this->assertEquals($this->code, $user->getCode());
+    }
+
+    public function testThrowsInvalidResponseErrorWhenBodyIsNotParseable()
+    {
+        $this->setExpectedException('\LaunchKey\SDK\Service\Exception\InvalidResponseError');
+        $this->setFixtureResponse("api_responses/invalid.txt");
+        $this->apiService->createWhiteLabelUser(null);
+    }
+
+    public function testThrowsInvalidResponseErrorWhenDecryptedDataIsNotJSON()
+    {
+        $this->setExpectedException('\LaunchKey\SDK\Service\Exception\InvalidResponseError');
+        \Phake::when($this->cryptService)->decryptAES(\Phake::anyParameters())->thenReturn(null);
+        $this->apiService->createWhiteLabelUser(null);
+    }
+
+    public function testThrowsCommunicationErrorOnServerError()
+    {
+        $this->setExpectedException('\LaunchKey\SDK\Service\Exception\CommunicationError');
+        $this->setFixtureResponse("api_responses/server_error.txt");
+        $this->apiService->createWhiteLabelUser(null);
+    }
+
+    public function testLogsDebugMessages()
+    {
+        $this->loggingApiService->createWhiteLabelUser(null);
+        \Phake::verify($this->logger, \Phake::atLeast(1))->debug(\Phake::anyParameters());
+    }
+
+    public function testThrowsInvalidRequestOn400()
+    {
+        $this->setExpectedException(
+            '\LaunchKey\SDK\Service\Exception\InvalidRequestError',
+            '{"username":"Invalid character used. Do not use &gt; &lt; ) ( @ : ; &amp;"}',
+            40421
+        );
+        $this->setFixtureResponse("api_responses/request_error.txt");
+        $this->apiService->createWhiteLabelUser(null);
+    }
+
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->setFixtureResponse("api_responses/wl_user_create_ok.txt");
+        \Phake::when($this->cryptService)
+            ->decryptAES(\Phake::anyParameters())
+            ->thenReturn('{"lk_identifier": "' . $this->lkIdentifier .
+                '", "qrcode": "' . $this->qrCodeUrl . '", "code": "' . $this->code . '"}');
     }
 }

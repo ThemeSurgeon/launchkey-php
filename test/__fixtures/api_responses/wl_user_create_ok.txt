@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 12 Mar 2015 16:55:12 GMT
+Content-Type: application/json; charset=UTF-8
+Fyi: cipher in data response JSON is Base64 encoded value: KeyKeyKeyKeyKeyKeyKeyKeyKeyKey32IvIvIvIvIvIvIvIv
+Content-Length: 205
+Connection: close
+
+{"successful": true, "status_code": 201, "message": "", "message_code": 10220, "response": {"cipher": "S2V5S2V5S2V5S2V5S2V5S2V5S2V5S2V5S2V5S2V5MzJJdkl2SXZJdkl2SXZJdkl2", "data": "Base64 Encoded Data"}}

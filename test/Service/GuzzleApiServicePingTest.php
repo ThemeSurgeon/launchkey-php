@@ -13,13 +13,13 @@ class GuzzleApiServicePingTest extends GuzzleApiServiceTestAbstract
     public function testPingSendsGet()
     {
         $this->apiService->ping();
-        $this->assertEquals('GET', $this->getGuzzleRequest()->getMethod());
+        $this->assertGuzzleRequestMethodEquals('GET');
     }
 
     public function testPingUsesPingPath()
     {
         $this->apiService->ping();
-        $this->assertEquals('/ping', $this->getGuzzleRequest()->getPath());
+        $this->assertGuzzleRequestPathEquals('/ping');
     }
 
     public function testPingPutsLaunchKeyTimeFromResponseInThePingResponseWithUTC()
@@ -77,6 +77,6 @@ class GuzzleApiServicePingTest extends GuzzleApiServiceTestAbstract
     protected function setUp()
     {
         parent::setUp();
-        $this->setFixtureResponse("api_responses/ping/ok.txt");
+        $this->setFixtureResponse("api_responses/ping_ok.txt");
     }
 }

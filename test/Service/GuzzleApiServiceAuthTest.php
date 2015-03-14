@@ -14,7 +14,13 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
     public function testAuthSendsPost()
     {
         $this->apiService->auth(null, null, null, null, null);
-        $this->assertEquals('POST', $this->getGuzzleRequest()->getMethod());
+        $this->assertGuzzleRequestMethodEquals('POST');
+    }
+
+    public function testAuthUSesCorrectPath()
+    {
+        $this->apiService->auth(null, null, null, null, null);
+        $this->assertGuzzleRequestPathEquals('/auths');
     }
 
     public function testAuthSendsContentTypeFormUrlEncoded()
@@ -38,7 +44,7 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
     public function testAuthUsesSecretKeyAndCurrentTimeInLaunchKeyTimeFormatForEncryptedSecretKey()
     {
         $this->apiService->auth(null, null);
-        $this->assertLastItemEncryptedWasValidSecretKey();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey();
     }
 
     public function testAuthSendsSignatureInFormData()
@@ -121,7 +127,7 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
     protected function setUp()
     {
         parent::setUp();
-        $this->setFixtureResponse("api_responses/auth/ok.txt");
+        $this->setFixtureResponse("api_responses/auth_ok.txt");
         Phake::when($this->cryptService)->encryptRSA(Phake::anyParameters())->thenReturn("RSA Encrypted");
         Phake::when($this->cryptService)->sign(Phake::anyParameters())->thenReturn("Signed");
     }

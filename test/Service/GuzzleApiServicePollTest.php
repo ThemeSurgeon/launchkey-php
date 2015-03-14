@@ -13,13 +13,13 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
     public function testPollIsGetRequest()
     {
         $this->apiService->poll(null);
-        $this->assertEquals("GET", $this->getGuzzleRequest()->getMethod());
+        $this->assertGuzzleRequestMethodEquals("GET");
     }
 
     public function testPollUsesCorrectRelativePath()
     {
         $this->apiService->poll(null);
-        $this->assertEquals("/poll", $this->getGuzzleRequest()->getPath());
+        $this->assertGuzzleRequestPathEquals("/poll");
     }
 
     public function testPollSendsAppKeyInFormData()
@@ -49,7 +49,7 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
     public function testPollEncryptedCorrectDataForSecretKey()
     {
         $this->apiService->poll(null);
-        $this->assertLastItemEncryptedWasValidSecretKey();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey();
     }
 
     public function testPollSignedTheEncryptedSecretKey()
@@ -60,7 +60,7 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
 
     public function testPollReturnsAuthResponseForPendingResponse()
     {
-        $this->setFixtureResponse("api_responses/poll/pending.txt");
+        $this->setFixtureResponse("api_responses/poll_pending.txt");
         $response = $this->apiService->poll(null);
         $this->assertInstanceOf('\LaunchKey\SDK\Domain\AuthResponse', $response);
         return $response;
@@ -122,14 +122,14 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
 
     public function testPollDecryptsAuthOnOkayResponse()
     {
-        $this->setFixtureResponse("api_responses/poll/ok.txt");
+        $this->setFixtureResponse("api_responses/poll_ok.txt");
         $this->apiService->poll(null);
         \Phake::verify($this->cryptService)->decryptRSA("Encrypted Auth");
     }
 
     public function testPollReturnsAuthResponseForOkayResponse()
     {
-        $this->setFixtureResponse("api_responses/poll/ok.txt");
+        $this->setFixtureResponse("api_responses/poll_ok.txt");
         $response = $this->apiService->poll(null);
         $this->assertInstanceOf('\LaunchKey\SDK\Domain\AuthResponse', $response);
         return $response;
@@ -157,9 +157,27 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
      * @depends testPollReturnsAuthResponseForOkayResponse
      * @param AuthResponse $authResponse
      */
-    public function testPollSetsAuthorizedTrueInAuthResponseForOkResponse(AuthResponse $authResponse)
+    public function testPollSetsAuthorizedTrueInAuthResponseForOkResponseAndTrue(AuthResponse $authResponse)
     {
+        \Phake::when($this->cryptService)->decryptRSA(\Phake::anyParameters())->thenReturn(
+            '{ "device_id": "Device ID", "response": "true", "auth_request": "Auth Request", "app_pins": "APP,PINS"}'
+        );
         $this->assertTrue($authResponse->isAuthorized());
+    }
+
+    /**
+     * @depends testPollReturnsAuthResponseForOkayResponse
+     * @throws \Exception
+     * @throws \LaunchKey\SDK\Service\Exception\InvalidRequestError
+     * @internal param AuthResponse $authResponse
+     */
+    public function testPollSetsAuthorizedFalseInAuthResponseForOkResponseAndFalse()
+    {
+        \Phake::when($this->cryptService)->decryptRSA(\Phake::anyParameters())->thenReturn(
+            '{ "device_id": "Device ID", "response": "false", "auth_request": "Auth Request", "app_pins": "APP,PINS"}'
+        );
+        $response = $this->apiService->poll(null);
+        $this->assertFalse($response->isAuthorized());
     }
 
     /**
@@ -227,7 +245,7 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
     protected function setUp()
     {
         parent::setUp();
-        $this->setFixtureResponse("api_responses/poll/ok.txt");
+        $this->setFixtureResponse("api_responses/poll_ok.txt");
         \Phake::when($this->cryptService)->decryptRSA(\Phake::anyParameters())->thenReturn(
             '{ "device_id": "Device ID", "response": "true", "auth_request": "Auth Request", "app_pins": "APP,PINS"}'
         );

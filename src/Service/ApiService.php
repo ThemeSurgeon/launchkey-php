@@ -52,7 +52,10 @@ interface ApiService
      * @param string $authRequest auth_request returned from an auth call
      * @param string $action Action to log.  i.e. Authenticate, Revoke, etc.
      * @param bool $status
-     * @return  If there was an error communicating with the endpoint
+     * @return null
+     * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
     public function log($authRequest, $action, $status);
 
