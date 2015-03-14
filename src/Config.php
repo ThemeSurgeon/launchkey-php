@@ -15,11 +15,11 @@ use Psr\Log\LoggerInterface;
 class Config
 {
     /**
-     * Seconds to cache ping requests.
+     * Seconds to cache public keys requests.
      *
      * @var int
      */
-    private $pingTTL = 60;
+    private $publicKeyTTL = 60;
 
     /**
      * Secret key for the organization or application.
@@ -64,7 +64,7 @@ class Config
     /**
      * @var string
      */
-    private $apiEndpoint = "https://api.launchkey.com/v1";
+    private $apiBaseUrl = "https://api.launchkey.com/v1";
 
     /**
      * @var int
@@ -77,24 +77,24 @@ class Config
     private $apiConnectTimeout = 0;
 
     /**
-     * Get the number of seconds a ping response will be cached.
+     * Get the number of seconds a public key will be cached.
      *
      * @return int
      */
-    public function getPingTTL()
+    public function getPublicKeyTTL()
     {
-        return $this->pingTTL;
+        return $this->publicKeyTTL;
     }
 
     /**
-     * Set the number of seconds a ping response will be cached.
+     * Set the number of seconds a public key will be cached.
      *
-     * @param mixed $pingTTL
+     * @param mixed $publicKeyTTL
      * @return $this
      */
-    public function setPingTTL($pingTTL)
+    public function setPublicKeyTTL($publicKeyTTL)
     {
-        $this->pingTTL = $pingTTL;
+        $this->publicKeyTTL = $publicKeyTTL;
         return $this;
     }
 
@@ -270,18 +270,18 @@ class Config
     /**
      * @return string
      */
-    public function getApiEndpoint()
+    public function getApiBaseUrl()
     {
-        return $this->apiEndpoint;
+        return $this->apiBaseUrl;
     }
 
     /**
-     * @param string $apiEndpoint
+     * @param string $apiBaseUrl
      * @return $this
      */
-    public function setApiEndpoint($apiEndpoint)
+    public function setApiBaseUrl($apiBaseUrl)
     {
-        $this->apiEndpoint = $apiEndpoint;
+        $this->apiBaseUrl = $apiBaseUrl;
         return $this;
     }
 

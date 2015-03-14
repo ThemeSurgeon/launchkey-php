@@ -16,14 +16,14 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
      */
     private $config;
 
-    public function testSetGetPingTTL()
+    public function testSetGetPublicKeyTTL()
     {
-        $this->assertEquals(9999, $this->config->setPingTTL(9999)->getPingTTL());
+        $this->assertEquals(9999, $this->config->setPublicKeyTTL(9999)->getPublicKeyTTL());
     }
 
-    public function testPingTTLDefaultsTo60()
+    public function testPublicKeyTTLDefaultsTo60()
     {
-        $this->assertEquals(60, $this->config->getPingTTL());
+        $this->assertEquals(60, $this->config->getPublicKeyTTL());
     }
 
     public function testSetAppSecretKey()
@@ -105,14 +105,14 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($log, $this->config->setLogger($log)->getLogger());
     }
 
-    public function testSetGetApiEndPoint()
+    public function testSetGetApiBaseUrl()
     {
-        $this->assertEquals("endpoint", $this->config->setApiEndpoint("endpoint")->getApiEndpoint());
+        $this->assertEquals("endpoint", $this->config->setApiBaseUrl("endpoint")->getApiBaseUrl());
     }
 
-    public function testGetApiEndpointDefaultsToProduction()
+    public function testGetApiBaseUrlDefaultsToProduction()
     {
-        $this->assertEquals("https://api.launchkey.com/v1", $this->config->getApiEndpoint());
+        $this->assertEquals("https://api.launchkey.com/v1", $this->config->getApiBaseUrl());
     }
 
     public function testSetGetPrivateKeyPassword()

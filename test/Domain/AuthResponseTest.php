@@ -16,19 +16,31 @@ class AuthResponseTest extends \PHPUnit_Framework_TestCase
      */
     private $entity;
 
+    /**
+     * @var AuthResponse
+     */
+    private $defaultEntity;
+
     protected function setUp()
     {
-        $this->entity = new AuthResponse("ID", "UserHash", "OrganizationUserID", "UserPushID");
+        $this->defaultEntity = new AuthResponse();
+        $this->entity = new AuthResponse(true, "AuthResponseID", "UserHash", "OrganizationUserID", "UserPushID", "DeviceID", true);
     }
 
     protected function tearDown()
     {
         $this->entity = null;
+        $this->defaultEntity = null;
     }
 
-    public function testId()
+    public function testAuthRequestId()
     {
-        $this->assertEquals("ID", $this->entity->getAuthRequestId());
+        $this->assertEquals("AuthResponseID", $this->entity->getAuthRequestId());
+    }
+
+    public function testAuthRequestIdDefaultsToNull()
+    {
+        $this->assertNull($this->defaultEntity->getAuthRequestId());
     }
 
     public function testUserHash()
@@ -36,20 +48,34 @@ class AuthResponseTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("UserHash", $this->entity->getUserHash());
     }
 
-    public function testIsCompletedDefaultsToFalse()
+    public function testUserHashDefaultsToNull()
     {
-        $this->assertFalse($this->entity->isCompleted());
+        $this->assertNull($this->defaultEntity->getUserHash());
     }
 
     public function testIsCompleted()
     {
-        $entity = new AuthResponse(null, null, null, null, true);
-        $this->assertTrue($entity->isCompleted());
+        $this->assertTrue($this->entity->isCompleted());
+    }
+
+    public function testIsCompletedDefaultsToFalse()
+    {
+        $this->assertFalse($this->defaultEntity->isCompleted());
+    }
+
+    public function testOrganizationUserIdDefaultsToNull()
+    {
+        $this->assertNull($this->defaultEntity->getOrganizationUserId());
     }
 
     public function testOrganizationUserId()
     {
         $this->assertEquals("OrganizationUserID", $this->entity->getOrganizationUserId());
+    }
+
+    public function testUserPushIdDefaultsToNull()
+    {
+        $this->assertNull($this->defaultEntity->getUserHash());
     }
 
     public function testUserPushId()
@@ -59,12 +85,21 @@ class AuthResponseTest extends \PHPUnit_Framework_TestCase
 
     public function testIsAuthorizedDefaultsToNull()
     {
-        $this->assertNull($this->entity->isAuthorized());
+        $this->assertNull($this->defaultEntity->isAuthorized());
     }
 
     public function testIsAuthorized()
     {
-        $entity = new AuthResponse(null, null, null, null, null, true);
-        $this->assertTrue($entity->isAuthorized());
+        $this->assertTrue($this->entity->isAuthorized());
+    }
+
+    public function testDeviceIdDefaultsToNull()
+    {
+        $this->assertNull($this->defaultEntity->getDeviceId());
+    }
+
+    public function testDeviceId()
+    {
+        $this->assertEquals("DeviceID", $this->entity->getDeviceId());
     }
 }

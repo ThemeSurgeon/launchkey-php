@@ -16,7 +16,6 @@ use LaunchKey\SDK\Event\AuthResponseEvent;
 use LaunchKey\SDK\Event\DeOrbitCallbackEvent;
 use LaunchKey\SDK\Event\DeOrbitRequestEvent;
 use LaunchKey\SDK\EventDispatcher\EventDispatcher;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
 class BasicAuthService implements AuthService
@@ -38,36 +37,17 @@ class BasicAuthService implements AuthService
     private $logger;
 
     /**
-     * @var string
-     */
-    private $appKey;
-
-    /**
-     * @var string
-     */
-    private $secretKey;
-
-    /**
-     * @param string $appKey App key from dashboard
-     * @param string $secretKey Application secret key from dashboard
      * @param ApiService $apiService
-     * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
      * @param LoggerInterface $logger
      */
     public function __construct(
-        $appKey,
-        $secretKey,
         ApiService $apiService,
-        PingService $pingService,
         EventDispatcher $eventDispatcher,
         LoggerInterface $logger = null
     )
     {
-        $this->appKey = $appKey;
-        $this->secretKey = $secretKey;
         $this->apiService = $apiService;
-        $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
     }
@@ -105,12 +85,11 @@ class BasicAuthService implements AuthService
      */
     public function getStatus($authRequestId)
     {
-        $publicKey = $this->pingService->ping()->getPublicKey();
-        if ($this->logger) $this->logger->debug("Sending poll request", array("authRequestId" => $authRequestId));
-        $authResponse = $this->apiService->poll($authRequestId, $publicKey);
-        if ($this->logger) $this->logger->debug("poll response received", array("response" => $authResponse));
+        $this->debugLog("Sending poll request", array("authRequestId" => $authRequestId));
+        $authResponse = $this->apiService->poll($authRequestId);
+        $this->debugLog("poll response received", array("response" => $authResponse));
         try {
-            $this->processAuthResponse($authResponse, $publicKey);
+            $this->processAuthResponse($authResponse);
         } catch (\Exception $e) {
             if ($this->logger) {
                 $this->logger->error("Error logging Authentication true", array("Exception" => $e));
@@ -129,9 +108,8 @@ class BasicAuthService implements AuthService
      */
     public function deOrbit($authRequestId)
     {
-        $publicKey = $this->pingService->ping()->getPublicKey();
-        if ($this->logger) $this->logger->debug("Logging Revoke true", array("authRequestId" => $authRequestId));
-        $this->apiService->log($authRequestId, "Revoke", true, $publicKey);
+        $this->debugLog("Logging Revoke true", array("authRequestId" => $authRequestId));
+        $this->apiService->log($authRequestId, "Revoke", true);
         $this->eventDispatcher->dispatchEvent(
             DeOrbitRequestEvent::NAME,
             new DeOrbitRequestEvent(new DeOrbitRequest($authRequestId))
@@ -147,13 +125,13 @@ class BasicAuthService implements AuthService
      */
     public function handleCallback(array $postData)
     {
-        if ($this->logger) $this->logger->debug("Handling callback", array("data" => $postData));
+        $this->debugLog("Handling callback", array("data" => $postData));
         $response = $this->apiService->handleCallback($postData);
         if ($response instanceof DeOrbitCallback) {
-            if ($this->logger) $this->logger->debug("De-orbit callback determined", array("data" => $response));
+            $this->debugLog("De-orbit callback determined", array("data" => $response));
             $this->eventDispatcher->dispatchEvent(DeOrbitCallbackEvent::NAME, new DeOrbitCallbackEvent($response));
         } elseif ($response instanceof AuthResponse) {
-            if ($this->logger) $this->logger->debug("Auth callback determined", array("data" => $response));
+            $this->debugLog("Auth callback determined", array("data" => $response));
             $this->processAuthResponse($response);
         }
     }
@@ -164,38 +142,29 @@ class BasicAuthService implements AuthService
      */
     private function auth($username, $session)
     {
-        if ($this->logger) {
-            $this->logger->debug(
-                "Sending auth request", array("username" => $username, "session" => $session)
-            );
-        }
-        $authRequest = $this->apiService->auth(
-            $username,
-            $session,
-            $this->appKey,
-            $this->secretKey,
-            $this->pingService->ping()->getPublicKey()
-        );
+        $this->debugLog("Sending auth request", array("username" => $username, "session" => $session));
+        $authRequest = $this->apiService->auth($username, $session);
         $this->eventDispatcher->dispatchEvent(AuthRequestEvent::NAME, new AuthRequestEvent($authRequest));
-        if ($this->logger) {
-            $this->logger->debug("auth response received", array("response" => $authRequest));
-        }
+        $this->debugLog("auth response received", array("response" => $authRequest));
         return $authRequest;
     }
 
     /**
      * @param AuthResponse $authResponse
-     * @param string $publicKey
      */
-    private function processAuthResponse(AuthResponse $authResponse, $publicKey = null)
+    private function processAuthResponse(AuthResponse $authResponse)
     {
         $this->eventDispatcher->dispatchEvent(AuthResponseEvent::NAME, new AuthResponseEvent($authResponse));
         if ($authResponse->isAuthorized()) {
             if ($this->logger) {
                 $this->logger->debug("Logging Authenticate true");
             }
-            $publicKey = $publicKey ? $publicKey : $this->pingService->ping()->getPublicKey();
-            $this->apiService->log($authResponse->getAuthRequestId(), "Authenticate", true, $publicKey);
+            $this->apiService->log($authResponse->getAuthRequestId(), "Authenticate", true);
         }
+    }
+
+    private function debugLog($message, $context)
+    {
+        if ($this->logger) $this->logger->debug($message, $context);
     }
 }

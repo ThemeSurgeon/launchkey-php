@@ -31,24 +31,20 @@ interface ApiService
      *
      * @param string $username Username to authorize
      * @param bool $session Is the request for a user session and not a transaction
-     * @param string $appKey App key for which the username will auth
-     * @param string $secretKey The LaunchKey Engine's secret key for the application.
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return AuthRequest
      */
-    public function auth($username, $session, $appKey, $secretKey, $publicKey);
+    public function auth($username, $session);
 
     /**
      * Poll to see if the auth request is completed and approved/denied
      *
      * @param string $authRequest auth_request returned from an auth call
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return AuthResponse
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function poll($authRequest, $publicKey);
+    public function poll($authRequest);
 
     /**
      * Update the LaunchKey Engine with the current status of the auth request or user session
@@ -56,25 +52,22 @@ interface ApiService
      * @param string $authRequest auth_request returned from an auth call
      * @param string $action Action to log.  i.e. Authenticate, Revoke, etc.
      * @param bool $status
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return  If there was an error communicating with the endpoint
      */
-    public function log($authRequest, $action, $status, $publicKey);
+    public function log($authRequest, $action, $status);
 
     /**
      * Create a white label user with the following identifier
      *
      * @param $identifier Unique and permanent identifier for the user in the white label application.  This identifier
      * will be used in all future communications regarding this user.  As such, it cannot ever change.
-     * @param string $appKey App key that belongs to the white label group in which the user will be created
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      *
      * @return WhiteLabelUser
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function createWhiteLabelUser($identifier, $appKey, $publicKey);
+    public function createWhiteLabelUser($identifier);
 
     /**
      * Handle a LaunchKey engine callback with the provided post data

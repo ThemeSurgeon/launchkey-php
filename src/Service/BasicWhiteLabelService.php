@@ -19,11 +19,6 @@ use Psr\Log\LoggerInterface;
 class BasicWhiteLabelService implements WhiteLabelService
 {
     /**
-     * @var CryptService
-     */
-    private $cryptService;
-
-    /**
      * @var ApiService
      */
     private $apiService;
@@ -34,41 +29,22 @@ class BasicWhiteLabelService implements WhiteLabelService
     private $eventDispatcher;
 
     /**
-     * @var PingService
-     */
-    private $pingService;
-
-    /**
      * @var LoggerAwareInterface
      */
     private $logger;
 
     /**
-     * @var string
-     */
-    private $appKey;
-
-    /**
-     * @param string $appKey App key from dashboard
-     * @param string $secretKey Secret key for application from dashboard
      * @param ApiService $apiService
-     * @param PingService $pingService
      * @param EventDispatcher $eventDispatcher
      * @param LoggerInterface $logger
      */
     public function __construct(
-        $appKey,
-        $secretKey,
         ApiService $apiService,
-        PingService $pingService,
         EventDispatcher $eventDispatcher,
         LoggerInterface $logger = null
     )
     {
-        $this->appKey = $appKey;
-        $this->secretKey = $secretKey;
         $this->apiService = $apiService;
-        $this->pingService = $pingService;
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
     }
@@ -78,14 +54,19 @@ class BasicWhiteLabelService implements WhiteLabelService
      * @return WhiteLabelUser
      */
     public function createUser($identifier) {
-        if ($this->logger) $this->logger->debug(
-            "Initiating white label user create request",
-            array("identifier" => $identifier)
-        );
-        $pingResponse = $this->pingService->ping();
-        $user = $this->apiService->createWhiteLabelUser($identifier, $this->appKey, $this->secretKey, $pingResponse->getPublicKey());
-        if ($this->logger) $this->logger->debug("White label user creates", array("user" => $user));
+        $this->debugLog("Initiating white label user create request", array("identifier" => $identifier));
+        $user = $this->apiService->createWhiteLabelUser($identifier);
+        $this->debugLog("White label user created", array("user" => $user));
         $this->eventDispatcher->dispatchEvent(WhiteLabelUserCreatedEvent::NAME, new WhiteLabelUserCreatedEvent($user));
         return $user;
+    }
+
+    /**
+     * @param $message
+     * @param $context
+     */
+    private function debugLog($message, $context)
+    {
+        if ($this->logger) $this->logger->debug($message, $context);
     }
 }

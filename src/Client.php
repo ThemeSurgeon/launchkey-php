@@ -6,6 +6,7 @@
 
 namespace LaunchKey\SDK;
 
+use LaunchKey\SDK\Guzzle\RequestFactory;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -97,29 +98,24 @@ class Client
 
         $cryptService = new Service\PhpSecLibCryptService($config->getPrivateKey(), $config->getPrivateKeyPassword());
         $apiService = self::getGuzzleApiService(
-            $config->getApiEndpoint(),
+            $config->getAppKey(),
+            $config->getSecretKey(),
+            $config->getApiBaseUrl(),
             $config->getApiConnectTimeout(),
             $config->getApiRequestTimeout(),
             $cryptService,
+            $cache,
+            $config->getPublicKeyTTL(),
             $logger
         );
 
-        $innerPingService = new Service\BasicPingService($apiService, $eventDispatcher, $logger);
-        $pingService = new Service\CachingPingService($innerPingService, $cache, $config->getPingTTL(), $logger);
-
         $authService = new Service\BasicAuthService(
-            $config->getAppKey(),
-            $config->getSecretKey(),
             $apiService,
-            $pingService,
             $eventDispatcher,
             $logger
         );
         $whiteLabelService = new Service\BasicWhiteLabelService(
-            $config->getAppKey(),
-            $config->getSecretKey(),
             $apiService,
-            $pingService,
             $eventDispatcher,
             $logger
         );
@@ -158,27 +154,36 @@ class Client
     }
 
     /**
-     * @param $endpoint
+     * @param string $appKey
+     * @param string $secretKey
+     * @param string $apiBaseUrl
      * @param int $connectTimeout
      * @param int $requestTimeout
      * @param Service\CryptService $cryptService
+     * @param Cache\Cache $cache
+     * @param int $publicKeyTTL
      * @param LoggerInterface $logger
      * @return Service\GuzzleApiService
      */
     private static function getGuzzleApiService(
-        $endpoint,
+        $appKey,
+        $secretKey,
+        $apiBaseUrl,
         $connectTimeout,
         $requestTimeout,
         Service\CryptService $cryptService,
+        Cache\Cache $cache,
+        $publicKeyTTL,
         LoggerInterface $logger = null
     ) {
-        $guzzle = new \Guzzle\Http\Client($endpoint, array(
+        $guzzle = new \Guzzle\Http\Client($apiBaseUrl, array(
             "redirect.disable" => true,
             'request.options' => array(
                 "timeout" => $requestTimeout,
                 "connect_timeout" => $connectTimeout,
             )
         ));
+        $guzzle->setRequestFactory(RequestFactory::getInstance());
 
         if ($logger) {
             $guzzle->getEventDispatcher()->addListener(
@@ -190,8 +195,12 @@ class Client
         }
 
         $apiService = new Service\GuzzleApiService(
+            $appKey,
+            $secretKey,
             $guzzle,
             $cryptService,
+            $cache,
+            $publicKeyTTL,
             $logger
         );
         return $apiService;

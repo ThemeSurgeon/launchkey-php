@@ -10,8 +10,11 @@ namespace LaunchKey\SDK\Service;
 use Guzzle\Http\ClientInterface;
 use Guzzle\Http\Exception\ClientErrorResponseException;
 use Guzzle\Http\Exception\ServerErrorResponseException;
+use Guzzle\Http\Message\EntityEnclosingRequest;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\Response;
+use Guzzle\Http\Url;
+use LaunchKey\SDK\Cache\Cache;
 use LaunchKey\SDK\Domain\AuthRequest;
 use LaunchKey\SDK\Domain\AuthResponse;
 use LaunchKey\SDK\Domain\DeOrbitCallback;
@@ -27,6 +30,19 @@ use Psr\Log\LoggerInterface;
 class GuzzleApiService implements ApiService
 {
     const LAUNCHKEY_DATE_FORMAT = "Y-m-d H:i:s";
+
+    const CACHE_KEY_PUBLIC_KEY = "launchkey-public-key-cache";
+
+    /**
+     * @var string
+     */
+    private $appKey;
+
+    /**
+     * @var string
+     */
+    private $secretKey;
+
     /**
      * @var ClientInterface
      */
@@ -43,13 +59,29 @@ class GuzzleApiService implements ApiService
     private $launchKeyDatTimeZone;
 
     /**
+     * @param string $appKey
+     * @param string $secretKey
      * @param ClientInterface $guzzleClient
      * @param CryptService $cryptService
+     * @param Cache $cache Cache implementation to be used for caching public keys
+     * @param int $publicKeyTTL Number of seconds a public key should live in the cache
      * @param LoggerInterface $logger
      */
-    public function __construct(ClientInterface $guzzleClient, CryptService $cryptService, LoggerInterface $logger = null) {
+    public function __construct(
+        $appKey,
+        $secretKey,
+        ClientInterface $guzzleClient,
+        CryptService $cryptService,
+        Cache $cache,
+        $publicKeyTTL,
+        LoggerInterface $logger = null
+    ) {
+        $this->appKey = $appKey;
+        $this->secretKey = $secretKey;
         $this->guzzleClient = $guzzleClient;
         $this->cryptService = $cryptService;
+        $this->cache = $cache;
+        $this->publicKeyTTL = $publicKeyTTL;
         $this->logger = $logger;
         $this->launchKeyDatTimeZone = new \DateTimeZone("UTC");
     }
@@ -77,37 +109,24 @@ class GuzzleApiService implements ApiService
      *
      * @param string $username Username to authorize
      * @param bool $session Is the request for a user session and not a transaction
-     * @param string $appKey App key for which the username will auth
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return AuthRequest
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function auth($username, $session, $appKey, $secretKey, $publicKey)
+    public function auth($username, $session)
     {
-        $encryptedSecretKey = $this->cryptService->encryptRSA(
-            json_encode(array("secret" => $secretKey, "stamped" => $this->getLaunchKeyDateString())),
-            $publicKey,
-            false
-        );
-        try {
-            $request = $this->guzzleClient->post("/auths")
-                ->addPostFields(array(
-                    "app_key" => $appKey,
-                    "secret_key" => base64_encode($encryptedSecretKey),
-                    "signature" => $this->cryptService->sign($encryptedSecretKey),
-                    "username" => $username,
-                    "session" => $session ? 1 : 0,
-                    "user_push_id" => 1
-                ));
-            $response = $request->send();
-        } catch (ClientErrorResponseException $e) {
-            $this->handleClientErrorResponseException($request, $e);
-        } catch (ServerErrorResponseException $e) {
-            $this->handleServerErrorResponseException($e);
-        }
-        $data = $this->decodeJsonFromBodyResponse($response);
+        $encryptedSecretKey = $this->getEncryptedSecretKey();
+        $request = $this->guzzleClient->post("/auths")
+            ->addPostFields(array(
+                "app_key" => $this->appKey,
+                "secret_key" => base64_encode($encryptedSecretKey),
+                "signature" => $this->cryptService->sign($encryptedSecretKey),
+                "username" => $username,
+                "session" => $session ? 1 : 0,
+                "user_push_id" => 1
+            ));
+        $data = $this->sendRequest($request);
         return new AuthRequest($username, $session, $data["auth_request"]);
     }
 
@@ -115,15 +134,42 @@ class GuzzleApiService implements ApiService
      * Poll to see if the auth request is completed and approved/denied
      *
      * @param string $authRequest auth_request returned from an auth call
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return AuthResponse
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function poll($authRequest, $publicKey)
+    public function poll($authRequest)
     {
-        // TODO: Implement poll() method.
+        $encryptedSecretKey = $this->getEncryptedSecretKey();
+        $request = $this->guzzleClient->get("/poll")
+            ->addPostFields(array(
+                "app_key" => $this->appKey,
+                "secret_key" => base64_encode($encryptedSecretKey),
+                "signature" => $this->cryptService->sign($encryptedSecretKey),
+                "auth_request" => $authRequest
+            ));
+        try {
+            $data = $this->sendRequest($request);
+            $auth = json_decode($this->cryptService->decryptRSA($data['auth']), true);
+            $response = new AuthResponse(
+                true,
+                $auth["auth_request"],
+                $data["user_hash"],
+                $data["organization_user"],
+                $data["user_push_id"],
+                $auth["device_id"],
+                $auth["response"] == "true"
+            );
+        } catch (InvalidRequestError $e) {
+            if ($e->getCode() == 70403) {
+                $response = new AuthResponse();
+            } else {
+                throw $e;
+            }
+        }
+        return $response;
+
     }
 
     /**
@@ -132,10 +178,9 @@ class GuzzleApiService implements ApiService
      * @param string $authRequest auth_request returned from an auth call
      * @param string $action Action to log.  i.e. Authenticate, Revoke, etc.
      * @param bool $status
-     * @param string $publicKey The LaunchKey Engine's RSA public key of the current RSA public/private key pair.
      * @return  If there was an error communicating with the endpoint
      */
-    public function log($authRequest, $action, $status, $publicKey)
+    public function log($authRequest, $action, $status)
     {
         // TODO: Implement log() method.
     }
@@ -153,7 +198,7 @@ class GuzzleApiService implements ApiService
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
-    public function createWhiteLabelUser($identifier, $appKey, $publicKey)
+    public function createWhiteLabelUser($identifier)
     {
         // TODO: Implement createWhiteLabelUser() method.
     }
@@ -175,10 +220,21 @@ class GuzzleApiService implements ApiService
      * @param $message
      * @param array $context
      */
-    private function debugLog($message, array $context)
+    private function debugLog($message, array $context = array())
     {
         if ($this->logger) {
             $this->logger->debug($message, $context);
+        }
+    }
+
+    /**
+     * @param $message
+     * @param array $context
+     */
+    private function errorLog($message, array $context)
+    {
+        if ($this->logger) {
+            $this->logger->error($message, $context);
         }
     }
 
@@ -192,20 +248,23 @@ class GuzzleApiService implements ApiService
         $original = error_reporting(E_ERROR);
         $data = json_decode($response->getBody(true), true);
         error_reporting($original);
-        if (json_last_error()) {
-            throw new InvalidResponseError("Unable to parse body as JSON: " . json_last_error_msg());
+
+        if (!$data) {
+            $message = "Unable to parse body as JSON";
+            if (function_exists("json_last_error_msg")) $message += ": " . json_last_error_msg();
+            throw new InvalidResponseError($message);
         }
         return $data;
     }
 
     private function getLaunchKeyDate($launchkeyTimeString)
     {
-        return \DateTime::createFromFormat(self::LAUNCHKEY_DATE_FORMAT, $launchkeyTimeString, $this->launchKeyDatTimeZone);
+        return \DateTime::createFromFormat(static::LAUNCHKEY_DATE_FORMAT, $launchkeyTimeString, $this->launchKeyDatTimeZone);
     }
 
     private function getLaunchKeyDateString()
     {
-        return date_create(null, $this->launchKeyDatTimeZone)->format(self::LAUNCHKEY_DATE_FORMAT);
+        return date_create(null, $this->launchKeyDatTimeZone)->format(static::LAUNCHKEY_DATE_FORMAT);
     }
 
     private function sendRequest(RequestInterface $request)
@@ -244,5 +303,51 @@ class GuzzleApiService implements ApiService
             throw new InvalidResponseError($msg);
         }
         return $data;
+    }
+
+    /**
+     * Get the current RSA public key for the LaunchKey API
+     *
+     * @return string
+     */
+    private function getPublicKey()
+    {
+        $response = null;
+        try {
+            $publicKey = $this->cache->get(static::CACHE_KEY_PUBLIC_KEY);
+        } catch (\Exception $e) {
+            $this->errorLog("An error occurred on a cache get", array("key" => static::CACHE_KEY_PUBLIC_KEY, "Exception" => $e));
+        }
+
+        if ($publicKey) {
+            $this->debugLog("Public key cache hit", array("key" => static::CACHE_KEY_PUBLIC_KEY));
+        } else {
+            $this->debugLog("Public key cache miss", array("key" => static::CACHE_KEY_PUBLIC_KEY));
+            $response = $this->ping();
+            $publicKey = $response->getPublicKey();
+            try {
+                $this->cache->set(static::CACHE_KEY_PUBLIC_KEY, $publicKey, $this->publicKeyTTL);
+                $this->debugLog("Public key saved to cache");
+            } catch (\Exception $e) {
+                $this->errorLog(
+                    "An error occurred on a cache set",
+                    array("key" => static::CACHE_KEY_PUBLIC_KEY, "value" => $publicKey, "Exception" => $e)
+                );
+            }
+        }
+        return $publicKey;
+    }
+
+    /**
+     * @return string
+     */
+    private function getEncryptedSecretKey()
+    {
+        $encryptedSecretKey = $this->cryptService->encryptRSA(
+            json_encode(array("secret" => $this->secretKey, "stamped" => $this->getLaunchKeyDateString())),
+            $this->getPublicKey(),
+            false
+        );
+        return $encryptedSecretKey;
     }
 }
