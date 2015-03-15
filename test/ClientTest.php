@@ -96,6 +96,20 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $client->eventDispatcher());
     }
 
+    public function testFactoryEventDispatcherForGuzzleClientLogsWhenEventDispatch()
+    {
+        $config = new Config();
+        $config->setLogger(Phake::mock('\Psr\Log\LoggerInterface'));
+        $config->setApiBaseUrl("Invalid URL to prevent making actual calls");
+        $authService = Client::factory($config)->auth();
+        try {
+            $authService->deOrbit("Request ID");
+        } catch (\Exception $e) {
+            // An exception should be thrown since the URL is invalid
+        }
+        Phake::verify($config->getLogger())->debug("Guzzle preparing to send request", $this->anything());
+    }
+
     protected function setUp()
     {
         $this->client = Client::factory("APP_KEY", "SECRET_KEY", $this->getPrivateKey());
