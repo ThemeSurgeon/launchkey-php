@@ -74,7 +74,7 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
     public function testSendsEncryptedSecretKeyInBodyJson(array $jsonDecoded)
     {
         $this->assertArrayHasKey("secret_key", $jsonDecoded);
-        $this->assertEquals($this->rsaEncrypted, $jsonDecoded["secret_key"]);
+        $this->assertEquals(base64_encode($this->rsaEncrypted), $jsonDecoded["secret_key"]);
     }
 
     public function testEncryptedCorrectDataForSecretKey()
@@ -87,9 +87,13 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
 
     public function testDecryptsBodyDataCorrectly()
     {
+        \Phake::when($this->cryptService)
+            ->decryptRSA(\Phake::anyParameters())
+            ->thenReturn("KeyKeyKeyKeyKeyKeyKeyKeyKeyKey32IvIvIvIvIvIvIvIv");
         $this->apiService->createWhiteLabelUser(null);
+        \Phake::verify($this->cryptService)->decryptRSA("Base64 Encrypted RSA Encrypted Cipher");
         \Phake::verify($this->cryptService)->decryptAES(
-            "Base64 Encoded Data",
+            "Base64 Encoded AES Encrypted Data",
             "KeyKeyKeyKeyKeyKeyKeyKeyKeyKey32",
             "IvIvIvIvIvIvIvIv"
         );
