@@ -347,9 +347,12 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
         $data = $this->jsonDecodeData($response->getBody(true));
         if (!$data) {
             $msg = "Unable to parse body as JSON";
+            // @codeCoverageIgnoreStart
+            // json_last_error_msg does not exist in all supported versions of PHP but will be helpful if there
             if (function_exists("json_last_error_msg")) {
                 $msg += ": " . json_last_error_msg();
             }
+            // @codeCoverageIgnoreEnd
             throw new InvalidResponseError($msg);
         }
         // If debug response with data in the "response" attribute return that
