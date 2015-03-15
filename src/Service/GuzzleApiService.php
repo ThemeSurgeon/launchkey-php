@@ -24,11 +24,9 @@ use LaunchKey\SDK\Service\Exception\InvalidResponseError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
 use Psr\Log\LoggerInterface;
 
-class GuzzleApiService implements ApiService
+class GuzzleApiService extends PublicKeyCachingAbstractApiService implements ApiService
 {
     const LAUNCHKEY_DATE_FORMAT = "Y-m-d H:i:s";
-
-    const CACHE_KEY_PUBLIC_KEY = "launchkey-public-key-cache";
 
     /**
      * @var string
@@ -49,6 +47,11 @@ class GuzzleApiService implements ApiService
      * @var CryptService
      */
     private $cryptService;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @var \DateTimeZone
@@ -73,12 +76,11 @@ class GuzzleApiService implements ApiService
         $publicKeyTTL,
         LoggerInterface $logger = null
     ) {
+        parent::__construct($cache, $publicKeyTTL, $logger);
         $this->appKey = $appKey;
         $this->secretKey = $secretKey;
         $this->guzzleClient = $guzzleClient;
         $this->cryptService = $cryptService;
-        $this->cache = $cache;
-        $this->publicKeyTTL = $publicKeyTTL;
         $this->logger = $logger;
         $this->launchKeyDatTimeZone = new \DateTimeZone("UTC");
     }
@@ -268,10 +270,6 @@ class GuzzleApiService implements ApiService
     {
         $auth = json_decode($this->cryptService->decryptRSA($postData["auth"]), true);
         if ($postData["auth_request"] !== $auth["auth_request"]) {
-            $this->errorLog(
-                "Auth callback auth_request values did not match",
-                array("post data" => $postData["auth_request"], "auth" => $auth["auth_request"])
-            );
             throw new InvalidRequestError("Invalid auth callback auth_request values did not match");
         }
         $response = new AuthResponse(
@@ -289,7 +287,6 @@ class GuzzleApiService implements ApiService
     private function handDeOrbitCallback(array $postData)
     {
         if (!$this->cryptService->verifySignature($postData["signature"], $postData["deorbit"], $this->getPublicKey())) {
-            $this->errorLog("Invalid signature for de-orbit request", $postData);
             throw new InvalidRequestError("Invalid signature for de-orbit callback");
         }
         $data = json_decode($postData["deorbit"], true);
@@ -309,17 +306,6 @@ class GuzzleApiService implements ApiService
     {
         if ($this->logger) {
             $this->logger->debug($message, $context);
-        }
-    }
-
-    /**
-     * @param $message
-     * @param array $context
-     */
-    private function errorLog($message, array $context)
-    {
-        if ($this->logger) {
-            $this->logger->error($message, $context);
         }
     }
 
@@ -368,39 +354,6 @@ class GuzzleApiService implements ApiService
         }
         // If debug response with data in the "response" attribute return that
         return isset($data["response"]) ? $data["response"] : $data;
-    }
-
-    /**
-     * Get the current RSA public key for the LaunchKey API
-     *
-     * @return string
-     */
-    private function getPublicKey()
-    {
-        $response = null;
-        try {
-            $publicKey = $this->cache->get(static::CACHE_KEY_PUBLIC_KEY);
-        } catch (\Exception $e) {
-            $this->errorLog("An error occurred on a cache get", array("key" => static::CACHE_KEY_PUBLIC_KEY, "Exception" => $e));
-        }
-
-        if ($publicKey) {
-            $this->debugLog("Public key cache hit", array("key" => static::CACHE_KEY_PUBLIC_KEY));
-        } else {
-            $this->debugLog("Public key cache miss", array("key" => static::CACHE_KEY_PUBLIC_KEY));
-            $response = $this->ping();
-            $publicKey = $response->getPublicKey();
-            try {
-                $this->cache->set(static::CACHE_KEY_PUBLIC_KEY, $publicKey, $this->publicKeyTTL);
-                $this->debugLog("Public key saved to cache");
-            } catch (\Exception $e) {
-                $this->errorLog(
-                    "An error occurred on a cache set",
-                    array("key" => static::CACHE_KEY_PUBLIC_KEY, "value" => $publicKey, "Exception" => $e)
-                );
-            }
-        }
-        return $publicKey;
     }
 
     /**

@@ -9,6 +9,7 @@ namespace LaunchKey\SDK\Test\Service;
 use Guzzle\Http\ClientInterface;
 use LaunchKey\SDK\Cache\Cache;
 use LaunchKey\SDK\Domain\AuthResponse;
+use LaunchKey\SDK\Domain\DeOrbitCallback;
 use LaunchKey\SDK\Service\CryptService;
 use LaunchKey\SDK\Service\GuzzleApiService;
 
@@ -191,12 +192,21 @@ class GuzzleApiServiceHandleCallbackTest extends \PHPUnit_Framework_TestCase
         return $response;
     }
 
-    public function testWhenPostDataIsForDeOrbitYouReceiveCorrectDeOrbitTime()
+    /** @depends testWhenPostDataIsForDeOrbitYouReceiveDeOrbitRequest */
+    public function testWhenPostDataIsForDeOrbitYouReceiveCorrectDeOrbitTime(DeOrbitCallback $callback)
     {
+        $expected = \DateTime::createFromFormat(
+            GuzzleApiService::LAUNCHKEY_DATE_FORMAT,
+            "2010-01-01 00:00:00",
+            new \DateTimeZone("UTC")
+        );
+        $this->assertEquals($expected, $callback->getDeOrbitTime());
     }
 
-    public function testWhenPostDataIsForDeOrbitYouReceiveCorrectUserHash()
+    /** @depends testWhenPostDataIsForDeOrbitYouReceiveDeOrbitRequest */
+    public function testWhenPostDataIsForDeOrbitYouReceiveCorrectUserHash(DeOrbitCallback $callback)
     {
+        $this->assertEquals("User Hash", $callback->getUserHash());
     }
 
     public function testWhenPostDataIsForDeOrbitInvalidRequestErrorIsThrownWhenSignatureDoesNotMatch()

@@ -49,12 +49,12 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
     protected $cache;
 
     /**
-     * @var GuzzleApiService
+     * @var GuzzleAbstractApiService
      */
     protected $apiService;
 
     /**
-     * @var GuzzleApiService
+     * @var GuzzleAbstractApiService
      */
     protected $loggingApiService;
 
