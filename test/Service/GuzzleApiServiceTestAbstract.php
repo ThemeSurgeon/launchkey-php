@@ -207,10 +207,16 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
         );
     }
 
-    protected function assertLastItemRsaEncryptedWasValidSecretKey() {
+    /**
+     * Verify that the last item the was RSA encrypted was a valid secret key.  Date times are provided
+     * in order to verify the correct "LaunchKey Time" was used for the stamped attribute.
+     * @param \DateTime $before
+     * @param \DateTime $after
+     */
+    protected function assertLastItemRsaEncryptedWasValidSecretKey(\DateTime $before, \DateTime $after) {
         $tz = new \DateTimeZone("UTC");
-        $before = new \DateTime("now", $tz);
-        $after = new \DateTime("now", $tz);
+        $before = $before->setTimezone($tz);
+        $after = $after->setTimezone($tz);
         $json = $publicKey = null;
         Phake::verify($this->cryptService)->encryptRSA(Phake::capture($json), Phake::capture($publicKey), false);
         $this->assertEquals($this->publicKey, $publicKey, "Unexpected value used for public key in encryptRSA");

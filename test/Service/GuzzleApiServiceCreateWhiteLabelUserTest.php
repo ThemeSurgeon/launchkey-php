@@ -79,8 +79,10 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
 
     public function testEncryptedCorrectDataForSecretKey()
     {
+        $before = new \DateTime();
         $this->apiService->createWhiteLabelUser(null);
-        $this->assertLastItemRsaEncryptedWasValidSecretKey();
+        $after = new \DateTime();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey($before, $after);
     }
 
     public function testDecryptsBodyDataCorrectly()

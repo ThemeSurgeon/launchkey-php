@@ -48,8 +48,10 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
 
     public function testPollEncryptedCorrectDataForSecretKey()
     {
+        $before = new \DateTime();
         $this->apiService->poll(null);
-        $this->assertLastItemRsaEncryptedWasValidSecretKey();
+        $after = new \DateTime();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey($before, $after);
     }
 
     public function testPollSignedTheEncryptedSecretKey()

@@ -43,8 +43,10 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
 
     public function testAuthUsesSecretKeyAndCurrentTimeInLaunchKeyTimeFormatForEncryptedSecretKey()
     {
+        $before = new \DateTime();
         $this->apiService->auth(null, null);
-        $this->assertLastItemRsaEncryptedWasValidSecretKey();
+        $after = new \DateTime();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey($before, $after);
     }
 
     public function testAuthSendsSignatureInFormData()
