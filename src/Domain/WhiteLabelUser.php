@@ -17,7 +17,7 @@ class WhiteLabelUser
     /**
      * @var string
      */
-    private $identifier;
+    private $launchKeyIdentifier;
 
     /**
      * @var string
@@ -30,15 +30,15 @@ class WhiteLabelUser
     private $code;
 
     /**
-     * @param string $identifier Permanent identifier for a user within the white label application.
+     * @param string $launchKeyIdentifier Permanent identifier for a user within the white label application.
      * @param string $qrCodeUrl URL for a QR code image to be used by the white label mobile application that will be
      * used to automatically pair a device with the white label user.
      * @param string $code Code to to be used by the white label mobile application that will be used to manually pair a
      * device with the white label user.
      */
-    public function __construct($identifier, $qrCodeUrl, $code)
+    public function __construct($launchKeyIdentifier, $qrCodeUrl, $code)
     {
-        $this->identifier = $identifier;
+        $this->launchKeyIdentifier = $launchKeyIdentifier;
         $this->qrCodeUrl = $qrCodeUrl;
         $this->code = $code;
     }
@@ -48,9 +48,9 @@ class WhiteLabelUser
      *
      * @return string
      */
-    public function getIdentifier()
+    public function getLaunchKeyIdentifier()
     {
-        return $this->identifier;
+        return $this->launchKeyIdentifier;
     }
 
     /**

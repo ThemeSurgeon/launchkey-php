@@ -105,7 +105,7 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
     /** @depends testReturnsWhiteLabelUserAsResponse */
     public function testSetsIdentifierCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
     {
-        $this->assertEquals($this->lkIdentifier, $user->getIdentifier());
+        $this->assertEquals($this->lkIdentifier, $user->getLaunchKeyIdentifier());
     }
 
     /** @depends testReturnsWhiteLabelUserAsResponse */

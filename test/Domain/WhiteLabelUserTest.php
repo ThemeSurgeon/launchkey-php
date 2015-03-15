@@ -18,7 +18,7 @@ class WhiteLabelUserTest extends \PHPUnit_Framework_TestCase
 
     public function testGetIdentifier()
     {
-        $this->assertEquals("identifier", $this->whiteLabelUser->getIdentifier());
+        $this->assertEquals("identifier", $this->whiteLabelUser->getLaunchKeyIdentifier());
     }
 
     public function testGetQrCodeUrl()

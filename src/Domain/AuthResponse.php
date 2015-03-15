@@ -27,7 +27,8 @@ class AuthResponse
     private $authorized;
 
     /**
-     * @var string User hash for that identifies the LaunchKey user across all applications or organizations
+     * @var string User hash for that identifies the LaunchKey user within the LaunchKey system regardless of
+     * a username change.
      */
     private $userHash;
 

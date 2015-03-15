@@ -51,22 +51,184 @@ composer require launchkey/launchkey
 
 ## Instantiate an SDK Client
 
+The easiest way to create a client is by passing an app key, secret key, and private key location to the factory:
 
-## Authenticate a user
+    ```php
+    $client = \LaunchKey\SDK\Client::factory(
+        "1234567890",
+        "supersecretandwayrandomsecretkey",
+        file_get_contents("/usr/local/etc/launchkey-app-private-key.pem")
+    );
 
+    ```
 
-## Authorize a user
+If needed, you can have better control over the environment by using the Config object:
 
+    ```php
+    $config = new \LaunchKey\SDK\Config();
+    $config->setAppKey("1234567890")
+        ->setSecretKey("supersecretandwayrandomsecretkey")
+        ->setPrivateKeyLocation("/usr/local/etc/launchkey-app-private-key.pem");
+
+Using the config object allows you to set many other configuration items:
+
+* Private key password - if you RSA private key is password protected
+
+* Cache - if you want to specify the cache implementation for public keys
+The default is local memory cache.
+
+* Event Dispatcher - Events are dispatched by the SDK client.  The default
+Event Dispatcher is a local synchronous dispatcher.
+
+* Logger - Log debug and error messages with context utilizing a PSR compliant
+logger.  By default no logger is implemented.
+
+* API Base URL - For future use.
+
+* API Request Timeout - How long the cURL client will wait for the remote API
+to respond before timing out.
+
+* API Connect Timeout - How long the cURL client will allow for connecting the
+ remote API before timing out.
+
+## Request a user authentication
+
+Authentication is used to start a durable user session.  Application login would
+be an example of when to use user authentication.
+
+Authentication creates a state know as "Orbiting" in the LaunchKey system.
+
+    ```php
+    $authRequest = $client->auth()->authenticate("LaunchKeyUserName");
+
+    ```
+
+A ```\LaunchKey\SDK\Domain\AuthRequest``` object will be returned to identify
+the authorization request created for this authentication request.  The auth
+request ID is this object will be used to identify this in the LaunchKey Engine
+form this point forward.
+
+## Request a user to authorize
+
+Authorization is used to authorize a single request.  It does not create a durable
+user session.  Authorizing a purchase transaction would be an example of when
+to use user authorization.
+
+    ```php
+    $authRequest = $client->auth()->authorize("LaunchKeyUserName");
+
+    ```
+
+A ```\LaunchKey\SDK\Domain\AuthRequest``` object will be returned to identify
+the authorization request created for this authentication request.  The auth
+request ID is this object will be used to identify this in the LaunchKey Engine
+form this point forward.
 
 ## Determine if an authentication request is still authorized
 
+You can determine the status of an auth request ID with a ```getStatus``` call:
 
-## Deorbit a user application session
+    ```php
+    $authResponse = $client->auth()->getStatus("authRequestId");
 
+    ```
+
+<a name="auth_response"/>
+A ```\LaunchKey\SDK\Domain\AuthResponse``` object will be returned to represent
+the current status of that authentication/authorization, or auth, request.
+That object will contain the following data:
+
+* Auth Request ID - The auth request its state represents.
+
+* Completed - Has the user responded to the request.
+
+* Authorized - How did the user response to the request.  NULL if completed is FALSE.
+
+* User Hash - A unique identifier that identifies the LaunchKey user within the
+ LaunchKey system regardless of a username change.  This value will be the best
+ value to accurately identify a user across applications and username changes.
+
+* Organization User ID - The identifier for this user in the organization in which
+the application for the auth request exists.  This will be null if the
+application does not belong to an organization.
+
+* User Push ID - The identifying link between this user and the application
+associated with the auth request.
+
+* Device ID - A unique identifier for the device with which the user responded
+to the request.
+
+## De-orbit a user application session
+
+When a user session, or orbit, was attained bu an authenticate request, a de-orbit
+call is required to end that session, or de-orbit.
+
+    ```php
+    $client->deOrbit("AuthRequestID");
+
+    ```
+
+The de-orbit request has no return.
+
+## Process a callback request
+
+Callback requests allow you to process changes in state of an authorization
+request in an asynchronous fashion.  By processing the post data received
+by the endpoint specified in the app configuration, this can be accomplished:
+
+    ```php
+     $response = $client->handleCallback($_POST);
+
+     ```
+
+There are two different callback types that can be differentiated by the
+object returned by the handle callback request:
+
+### Auth Response
+
+If configured, when a user responds to an auth request, an auth callback will be made.
+The auth callback returns a ```\LaunchKey\SDK\Domain\AuthResponse``` object that
+which is the <a href="#auth_response">same object returned by the ```getStatus``` call</a>.
+
+### De-orbit
+
+A user can initiate a de-orbit request remotely. If configured, the de-orbit callback is
+how your application is informed of this event.  The de-orbit callback returns a
+```\LaunchKey\SDK\Domain\DeOrbitCallback``` object.  The object identifies:
+
+* User Hash - User hash of the user that performed the de-orbit.
+
+* De-orbit Time - ```\DateTime``` object with the date/time the de-orbit request was made.
+The de-orbit time should be used to determine if the de-orbit is still valid.  Due to the
+asynchronous nature of callbacks, however unlikely, the user may have re-orbited
+since the de-orbit request.  The de-orbit time can also be used to prevent replay attacks
+that could prevent your users from accessing your system by continuously logging them
+out by resending old de-orbit requests.
 
 ## Create a white label user
 
-    
+If you have a white label application, you will need to create users via an API call.
+If your users use the LaunchKey Mobile application to accept auth requests, you will
+not need this call and using it will trigger exceptions.
+
+There currently is no direct way to create users for a white label group, you will need
+to configure the client for an application that belongs to the white label group.
+
+Creating a white label user is accomplished by passing an identifier for your PHP application
+to the ```createUser``` method.  The identifier needs to be permanent and unique
+as this identifier will be used to pair devices within your white label mobile application.
+
+    ```php
+    $whiteLabelUser = $client->whiteLabel()->createUser($identifier);
+
+    ```
+
+The create user call returns a ```\LaunchKey\SDK\Domain\DeOrbitCallback``` object that
+contains:
+
+* LaunchKey Identifier - A unique identifier for the user within the white label group.  The
+value should be used to where a user hash would be used within the auth related calls.
+
 <a name="support"></a>
 # Support
 

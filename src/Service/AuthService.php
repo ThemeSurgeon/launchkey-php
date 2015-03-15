@@ -7,6 +7,7 @@ namespace LaunchKey\SDK\Service;
 
 use LaunchKey\SDK\Domain\AuthRequest;
 use LaunchKey\SDK\Domain\AuthResponse;
+use LaunchKey\SDK\Domain\DeOrbitCallback;
 
 interface AuthService
 {
@@ -52,7 +53,7 @@ interface AuthService
      * be the global $_POST array of an array of post data provided by an MVC framework like Zend, Cake, Symfony, etc.
      *
      * @param array $postData
-     * @return mixed
+     * @return AuthResponse|DeOrbitCallback
      */
     public function handleCallback(array $postData);
 }
