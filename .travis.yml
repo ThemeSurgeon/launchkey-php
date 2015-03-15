@@ -18,7 +18,7 @@ matrix:
 install: COMPOSER_ROOT_VERSION=dev-master composer --prefer-source --dev install
 
 before_script:
-- if [ "$GUZZLE_VERSION" != "" ]; then composer require "guzzlehttp/guzzle:${GUZZLE_VERSION}" --prefer-source; fi
+- if [ "$GUZZLE_VERSION" != "" ]; then composer require "guzzle/guzzle:${GUZZLE_VERSION}" --prefer-source; fi
 
 script: vendor/bin/phpunit
 
