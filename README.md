@@ -13,8 +13,8 @@
 <a name="overview"></a>
 # Overview
 
-LaunchKey is an identity and access management platform  This Java SDK enables developers to quickly integrate
-the LaunchKey platform and Java based applications without the need to directly interact with the platform API.
+LaunchKey is an identity and access management platform  This SDK enables developers to quickly integrate
+the LaunchKey platform and PHP based applications without the need to directly interact with the platform API.
 
 Developer documentation for using the LaunchKey API is found [here](https://launchkey.com/docs/).
 
