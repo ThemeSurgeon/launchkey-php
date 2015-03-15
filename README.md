@@ -229,6 +229,12 @@ contains:
 * LaunchKey Identifier - A unique identifier for the user within the white label group.  The
 value should be used to where a user hash would be used within the auth related calls.
 
+* QR Code URL - A URL to a QR code image that can be used to pair a device via a
+white label mobile application.
+
+* Code - An alphanumeric value that can be manually entered into a white label mobile
+application to pair the device.
+
 <a name="support"></a>
 # Support
 
