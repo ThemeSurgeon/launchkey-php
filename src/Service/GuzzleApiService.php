@@ -212,18 +212,16 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      */
     public function createWhiteLabelUser($identifier)
     {
-        $encryptedSecretKey = $this->getEncryptedSecretKey();
         $body = json_encode(array(
             "app_key" => $this->appKey,
-            "secret_key" => $encryptedSecretKey,
-            "signature" => $this->cryptService->sign($encryptedSecretKey),
+            "secret_key" => base64_encode($this->getEncryptedSecretKey()),
             "identifier" => $identifier
         ));
         $request = $this->guzzleClient->post("/v1/users")
            ->setBody($body, "application/json");
         $request->getQuery()->add("signature", $this->cryptService->sign($body));
         $data = $this->sendRequest($request);
-        $cipher = base64_decode($data["cipher"]);
+        $cipher = $this->cryptService->decryptRSA($data["cipher"]);
         $key = substr($cipher, 0, strlen($cipher) - 16);
         $iv = substr($cipher, -16);
         $userJsonData = $this->cryptService->decryptAES($data["data"], $key, $iv);
