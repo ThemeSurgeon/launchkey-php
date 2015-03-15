@@ -6,9 +6,6 @@
 
 namespace LaunchKey\SDK;
 
-use LaunchKey\SDK\Guzzle\RequestFactory;
-use Psr\Log\LoggerInterface;
-
 /**
  * LaunchKey SDK Client
  *
@@ -162,7 +159,7 @@ class Client
      * @param Service\CryptService $cryptService
      * @param Cache\Cache $cache
      * @param int $publicKeyTTL
-     * @param LoggerInterface $logger
+     * @param \Psr\Log\LoggerInterface $logger
      * @return Service\GuzzleApiService
      */
     private static function getGuzzleApiService(
@@ -174,7 +171,7 @@ class Client
         Service\CryptService $cryptService,
         Cache\Cache $cache,
         $publicKeyTTL,
-        LoggerInterface $logger = null
+        \Psr\Log\LoggerInterface $logger = null
     ) {
         $guzzle = new \Guzzle\Http\Client($apiBaseUrl, array(
             "redirect.disable" => true,
@@ -183,7 +180,6 @@ class Client
                 "connect_timeout" => $connectTimeout,
             )
         ));
-        $guzzle->setRequestFactory(RequestFactory::getInstance());
 
         if ($logger) {
             $guzzle->getEventDispatcher()->addListener(

@@ -11,7 +11,6 @@ use Guzzle\Http\Client;
 use Guzzle\Http\Message\EntityEnclosingRequestInterface;
 use Guzzle\Http\Message\Response;
 use Guzzle\Plugin\Mock\MockPlugin;
-use LaunchKey\SDK\Guzzle\RequestFactory;
 use LaunchKey\SDK\Service\GuzzleApiService;
 use LaunchKey\SDK\Test\FixtureTestAbstract;
 use Phake;
@@ -75,7 +74,6 @@ abstract class GuzzleApiServiceTestAbstract extends FixtureTestAbstract
         Phake::when($this->cryptService)->sign(Phake::anyParameters())->thenReturn($this->signed);
         Phake::when($this->cache)->get(GuzzleApiService::CACHE_KEY_PUBLIC_KEY)->thenReturn($this->publicKey);
         $this->guzzleClient = new Client();
-        $this->guzzleClient->setRequestFactory(RequestFactory::getInstance());
         $this->guzzleMockPlugin = new MockPlugin();
         $this->guzzleClient->addSubscriber($this->guzzleMockPlugin);
         $this->apiService = new GuzzleApiService(

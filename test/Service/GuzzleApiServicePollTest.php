@@ -10,16 +10,22 @@ use LaunchKey\SDK\Domain\AuthResponse;
 
 class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
 {
-    public function testPollIsGetRequest()
+    public function testPollIsPostRequest()
     {
         $this->apiService->poll(null);
-        $this->assertGuzzleRequestMethodEquals("GET");
+        $this->assertGuzzleRequestMethodEquals("POST");
     }
 
     public function testPollUsesCorrectRelativePath()
     {
         $this->apiService->poll(null);
         $this->assertGuzzleRequestPathEquals("/v1/poll");
+    }
+
+    public function testPollSendsMethodOverrideForGet()
+    {
+        $this->apiService->poll(null);
+        $this->assertGuzzleRequestQueryStringParameterEquals("METHOD", "GET");
     }
 
     public function testPollSendsAppKeyInFormData()

@@ -141,13 +141,14 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
     public function poll($authRequest)
     {
         $encryptedSecretKey = $this->getEncryptedSecretKey();
-        $request = $this->guzzleClient->get("/v1/poll")
+        $request = $this->guzzleClient->post("/v1/poll")
             ->addPostFields(array(
                 "app_key" => $this->appKey,
                 "secret_key" => base64_encode($encryptedSecretKey),
                 "signature" => $this->cryptService->sign($encryptedSecretKey),
                 "auth_request" => $authRequest
             ));
+        $request->getQuery()->add("METHOD", "GET");
         try {
             $data = $this->sendRequest($request);
             $auth = json_decode($this->cryptService->decryptRSA($data['auth']), true);
