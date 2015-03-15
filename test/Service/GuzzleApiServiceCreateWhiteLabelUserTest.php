@@ -25,7 +25,7 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
     public function testUsesCorrectRelativePath()
     {
         $this->apiService->createWhiteLabelUser(null);
-        $this->assertGuzzleRequestPathEquals("/users");
+        $this->assertGuzzleRequestPathEquals("/v1/users");
     }
 
     public function testSendsApplicationJsonAsContentType()

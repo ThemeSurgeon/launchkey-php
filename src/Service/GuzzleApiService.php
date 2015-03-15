@@ -92,7 +92,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      */
     public function ping()
     {
-            $request = $this->guzzleClient->get("/ping");
+            $request = $this->guzzleClient->get("/v1/ping");
             $data = $this->sendRequest($request);
 
         $pingResponse = new PingResponse(
@@ -116,7 +116,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
     public function auth($username, $session)
     {
         $encryptedSecretKey = $this->getEncryptedSecretKey();
-        $request = $this->guzzleClient->post("/auths")
+        $request = $this->guzzleClient->post("/v1/auths")
             ->addPostFields(array(
                 "app_key" => $this->appKey,
                 "secret_key" => base64_encode($encryptedSecretKey),
@@ -141,7 +141,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
     public function poll($authRequest)
     {
         $encryptedSecretKey = $this->getEncryptedSecretKey();
-        $request = $this->guzzleClient->get("/poll")
+        $request = $this->guzzleClient->get("/v1/poll")
             ->addPostFields(array(
                 "app_key" => $this->appKey,
                 "secret_key" => base64_encode($encryptedSecretKey),
@@ -185,7 +185,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
     public function log($authRequest, $action, $status)
     {
         $encryptedSecretKey = $this->getEncryptedSecretKey();
-        $request = $this->guzzleClient->put("/logs")
+        $request = $this->guzzleClient->put("/v1/logs")
             ->addPostFields(array(
                 "app_key" => $this->appKey,
                 "secret_key" => base64_encode($encryptedSecretKey),
@@ -218,7 +218,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
             "signature" => $this->cryptService->sign($encryptedSecretKey),
             "identifier" => $identifier
         ));
-        $request = $this->guzzleClient->post("/users")
+        $request = $this->guzzleClient->post("/v1/users")
            ->setBody($body, "application/json");
         $request->getQuery()->add("signature", $this->cryptService->sign($body));
         $data = $this->sendRequest($request);

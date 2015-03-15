@@ -19,7 +19,7 @@ class GuzzleApiServicePollTest extends GuzzleApiServiceTestAbstract
     public function testPollUsesCorrectRelativePath()
     {
         $this->apiService->poll(null);
-        $this->assertGuzzleRequestPathEquals("/poll");
+        $this->assertGuzzleRequestPathEquals("/v1/poll");
     }
 
     public function testPollSendsAppKeyInFormData()

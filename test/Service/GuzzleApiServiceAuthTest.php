@@ -20,7 +20,7 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
     public function testAuthUSesCorrectPath()
     {
         $this->apiService->auth(null, null, null, null, null);
-        $this->assertGuzzleRequestPathEquals('/auths');
+        $this->assertGuzzleRequestPathEquals('/v1/auths');
     }
 
     public function testAuthSendsContentTypeFormUrlEncoded()

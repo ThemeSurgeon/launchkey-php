@@ -64,7 +64,7 @@ class Config
     /**
      * @var string
      */
-    private $apiBaseUrl = "https://api.launchkey.com/v1";
+    private $apiBaseUrl = "https://api.launchkey.com";
 
     /**
      * @var int

@@ -112,7 +112,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
 
     public function testGetApiBaseUrlDefaultsToProduction()
     {
-        $this->assertEquals("https://api.launchkey.com/v1", $this->config->getApiBaseUrl());
+        $this->assertEquals("https://api.launchkey.com", $this->config->getApiBaseUrl());
     }
 
     public function testSetGetPrivateKeyPassword()

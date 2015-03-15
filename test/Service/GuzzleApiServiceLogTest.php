@@ -23,7 +23,7 @@ class GuzzleApiServiceLogTest extends GuzzleApiServiceTestAbstract
     public function testLogUsesCorrectRelativePath()
     {
         $this->apiService->log(null, null, null);
-        $this->assertGuzzleRequestPathEquals("/logs");
+        $this->assertGuzzleRequestPathEquals("/v1/logs");
     }
 
     public function testLogSendsAppKeyInFormData()

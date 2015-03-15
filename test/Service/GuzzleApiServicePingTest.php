@@ -19,7 +19,7 @@ class GuzzleApiServicePingTest extends GuzzleApiServiceTestAbstract
     public function testPingUsesPingPath()
     {
         $this->apiService->ping();
-        $this->assertGuzzleRequestPathEquals('/ping');
+        $this->assertGuzzleRequestPathEquals('/v1/ping');
     }
 
     public function testPingPutsLaunchKeyTimeFromResponseInThePingResponseWithUTC()
