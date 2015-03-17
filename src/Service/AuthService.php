@@ -23,7 +23,7 @@ interface AuthService
      * Request a user session for the provided username
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
-     * @return AuthResponse
+     * @return AuthRequest
      */
     public function authenticate($username);
 

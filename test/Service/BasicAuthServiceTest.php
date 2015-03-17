@@ -306,6 +306,14 @@ class BasicAuthServiceTest extends \PHPUnit_Framework_TestCase
             ->log("auth request authRequestId", "Authenticate", true);
     }
 
+    public function testHandleCallbackReturnsResponseFromApiService()
+    {
+        $expected = new AuthResponse(true, "auth request authRequestId", null, null, null, null, true);
+        Phake::when($this->apiService)->handleCallback(Phake::anyParameters())->thenReturn($expected);
+        $actual = $this->authService->handleCallback(array());
+        $this->assertEquals($expected, $actual);
+    }
+
     protected function setUp()
     {
         Phake::initAnnotations($this);
