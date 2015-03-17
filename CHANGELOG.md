@@ -18,3 +18,10 @@ shows the difference between the v0.1.0 and v0.1.1 tags.
     * Terminology change for handleCallback regarding query string data versus post data.
         * Updated documentation to reflect using query string data in README and doc blocks
         * Updated variable names from postData to queryParameters to alleviate any confusion
+* 1.0.0-alpha3
+    * Greatly improved API error code handling to allow for proper handling of:
+        * No such user
+        * Expired auth request
+        * No paired devices
+        * Rate limit exceeded
+        * Engine error processing log call
