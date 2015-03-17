@@ -18,9 +18,14 @@ use LaunchKey\SDK\Domain\DeOrbitCallback;
 use LaunchKey\SDK\Domain\PingResponse;
 use LaunchKey\SDK\Domain\WhiteLabelUser;
 use LaunchKey\SDK\Service\Exception\CommunicationError;
+use LaunchKey\SDK\Service\Exception\ExpiredAuthRequestError;
 use LaunchKey\SDK\Service\Exception\InvalidCredentialsError;
 use LaunchKey\SDK\Service\Exception\InvalidRequestError;
 use LaunchKey\SDK\Service\Exception\InvalidResponseError;
+use LaunchKey\SDK\Service\Exception\LaunchKeyEngineError;
+use LaunchKey\SDK\Service\Exception\NoPairedDevicesError;
+use LaunchKey\SDK\Service\Exception\NoSuchUserError;
+use LaunchKey\SDK\Service\Exception\RateLimitExceededError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
 use Psr\Log\LoggerInterface;
 
@@ -89,6 +94,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      * Perform a ping request
      * @return PingResponse
      * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
     public function ping()
     {
@@ -111,6 +117,9 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      * @return AuthRequest
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws NoPairedDevicesError If the account for the provided username has no paired devices with which to respond
+     * @throws NoSuchUserError If the username provided does not exist
+     * @throws RateLimitExceededError If the same username is requested to often and exceeds the rate limit
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
     public function auth($username, $session)
@@ -137,6 +146,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
+     * @throws ExpiredAuthRequestError If the auth request has expired
      */
     public function poll($authRequest)
     {
@@ -182,6 +192,8 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
      * @throws InvalidRequestError If the endpoint proclaims the request invalid
+     * @throws ExpiredAuthRequestError If the auth request has expired
+     * @throws LaunchKeyEngineError If the LaunchKey cannot apply the request auth request, action, status
      */
     public function log($authRequest, $action, $status)
     {
@@ -318,6 +330,19 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
         return date_create(null, $this->launchKeyDatTimeZone)->format(static::LAUNCHKEY_DATE_FORMAT);
     }
 
+    /**
+     * @param RequestInterface $request
+     * @return array
+     * @throws CommunicationError
+     * @throws ExpiredAuthRequestError
+     * @throws InvalidCredentialsError
+     * @throws InvalidRequestError
+     * @throws InvalidResponseError
+     * @throws LaunchKeyEngineError
+     * @throws NoPairedDevicesError
+     * @throws NoSuchUserError
+     * @throws RateLimitExceededError
+     */
     private function sendRequest(RequestInterface $request)
     {
         try {
@@ -338,7 +363,52 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
                     $code = $data["message_code"];
                 }
             }
-            throw new InvalidRequestError($message, $code, $e);
+
+            switch ($code) {
+                case "40422":
+                case "40423":
+                case "40425":
+                case "40428":
+                case "40429":
+                case "40432":
+                case "40433":
+                case "40434":
+                case "40435":
+                case "40437":
+                case "50442":
+                case "50443":
+                case "50444":
+                case "50445":
+                case "50447":
+                case "50448":
+                case "50449":
+                case "50452":
+                case "50453":
+                case "50454":
+                case "50457":
+                    throw new InvalidCredentialsError($message, $code, $e);
+                    break;
+                case "40424":
+                    throw new NoPairedDevicesError($message, $code, $e);
+                    break;
+                case "40426":
+                    throw new NoSuchUserError($message, $code, $e);
+                    break;
+                case "40431":
+                case "50451":
+                case "70404":
+                    throw new ExpiredAuthRequestError($message, $code, $e);
+                    break;
+                case "40436":
+                    throw new RateLimitExceededError($message, $code, $e);
+                    break;
+                case "50455":
+                    throw new LaunchKeyEngineError($message, $code, $e);
+                    break;
+                default:
+                    throw new InvalidRequestError($message, $code, $e);
+                    break;
+            }
         } catch (ServerErrorResponseException $e) {
             throw new CommunicationError("Error performing request", $e->getCode(), $e);
         }

@@ -57,6 +57,12 @@ class BasicAuthService implements AuthService
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
      * @return AuthRequest
+     * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws NoPairedDevicesError If the account for the provided username has no paired devices with which to respond
+     * @throws NoSuchUserError If the username provided does not exist
+     * @throws RateLimitExceededError If the same username is requested to often and exceeds the rate limit
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
     public function authorize($username)
     {
@@ -68,6 +74,12 @@ class BasicAuthService implements AuthService
      *
      * @param string $username LaunchKey username, user hash, or internal identifier for the user
      * @return AuthResponse
+     * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws NoPairedDevicesError If the account for the provided username has no paired devices with which to respond
+     * @throws NoSuchUserError If the username provided does not exist
+     * @throws RateLimitExceededError If the same username is requested to often and exceeds the rate limit
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
      */
     public function authenticate($username)
     {
@@ -82,6 +94,10 @@ class BasicAuthService implements AuthService
      * @param string $authRequestId ID from the AuthResponse object returned from a previous authorize
      * or authenticate call.
      * @return AuthResponse
+     * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
+     * @throws ExpiredAuthRequestError If the auth request has expired
      */
     public function getStatus($authRequestId)
     {
@@ -105,6 +121,11 @@ class BasicAuthService implements AuthService
      *
      * @param $authRequestId
      * @return null
+     * @throws CommunicationError If there was an error communicating with the endpoint
+     * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid
+     * @throws InvalidRequestError If the endpoint proclaims the request invalid
+     * @throws ExpiredAuthRequestError If the auth request has expired
+     * @throws LaunchKeyEngineError If the LaunchKey cannot apply the request auth request, action, status
      */
     public function deOrbit($authRequestId)
     {
