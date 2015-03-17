@@ -173,11 +173,11 @@ The de-orbit request has no return.
 ## Process a callback request
 
 Callback requests allow you to process changes in state of an authorization
-request in an asynchronous fashion.  By processing the post data received
-by the endpoint specified in the app configuration, this can be accomplished:
+request in an asynchronous fashion.  By processing the query string data received
+by a POST call to the endpoint specified in the app configuration, this can be accomplished:
 
     ```php
-     $response = $client->handleCallback($_POST);
+     $response = $client->handleCallback($_GET);
 
      ```
 

@@ -117,16 +117,17 @@ class BasicAuthService implements AuthService
     }
 
     /**
-     * Handle a callback request from the LaunchKey Engine.  This data is an associative array of POST data.  This can
-     * be the global $_POST array of an array of post data provided by an MVC framework like Zend, Cake, Symfony, etc.
+     * Handle a callback request from the LaunchKey Engine.  This data is an associative array of query string key value
+     * pairs from the callback POST.  This can be the global $_GET array or an array of query parameters provided by an
+     * MVC framework like Zend, Cake, Symfony, etc.
      *
-     * @param array $postData
+     * @param array $queryParameters Key/value pairs derived from the query string
      * @return AuthResponse|DeOrbitCallback
      */
-    public function handleCallback(array $postData)
+    public function handleCallback(array $queryParameters)
     {
-        $this->debugLog("Handling callback", array("data" => $postData));
-        $response = $this->apiService->handleCallback($postData);
+        $this->debugLog("Handling callback", array("data" => $queryParameters));
+        $response = $this->apiService->handleCallback($queryParameters);
         if ($response instanceof DeOrbitCallback) {
             $this->debugLog("De-orbit callback determined", array("data" => $response));
             $this->eventDispatcher->dispatchEvent(DeOrbitCallbackEvent::NAME, new DeOrbitCallbackEvent($response));
