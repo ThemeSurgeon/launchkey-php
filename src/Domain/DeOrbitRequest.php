@@ -7,8 +7,7 @@
 namespace LaunchKey\SDK\Domain;
 
 /**
- * Request the LaunchKey Engine to de-orbit the user session identified by the auth_request identified by the provided
- * request ID.
+ * Value object representing a request to de-orbit an authorization request
  *
  * @package LaunchKey\SDK\Domain
  */

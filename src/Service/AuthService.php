@@ -9,6 +9,11 @@ use LaunchKey\SDK\Domain\AuthRequest;
 use LaunchKey\SDK\Domain\AuthResponse;
 use LaunchKey\SDK\Domain\DeOrbitCallback;
 
+/**
+ * Interface for services providing user authorization/authentication actions
+ *
+ * @package LaunchKey\SDK\Service
+ */
 interface AuthService
 {
     /**

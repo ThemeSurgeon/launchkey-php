@@ -7,7 +7,7 @@
 namespace LaunchKey\SDK\Domain;
 
 /**
- * Domain value object representing a white label user
+ * Value object representing a white label user
  *
  * Class WhiteLabelUser
  * @package LaunchKey\SDK\Domain

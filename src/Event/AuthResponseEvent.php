@@ -11,6 +11,7 @@ use LaunchKey\SDK\Domain\AuthResponse;
 /**
  * Event dispatched after the SDK receives a LaunchKey authorization response from either a poll request or a
  * LaunchKey engine callback
+ *
  * @package LaunchKey\SDK\Event
  */
 class AuthResponseEvent extends AbstractEvent

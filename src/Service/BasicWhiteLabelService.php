@@ -13,7 +13,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Service for interacting with the LaunchKey Engine regarding White Label Groups
+ * Basic implementation of the WhiteLabelService providing event dispatching abd logging
  * @package LaunchKey\SDK\Service
  */
 class BasicWhiteLabelService implements WhiteLabelService

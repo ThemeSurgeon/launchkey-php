@@ -10,7 +10,8 @@ namespace LaunchKey\SDK\EventDispatcher;
 use LaunchKey\SDK\Event\Event;
 
 /**
- * Interface EventDispatcher
+ * Interface for performing event dispatching
+ *
  * @package LaunchKey\SDK\Service
  */
 interface EventDispatcher

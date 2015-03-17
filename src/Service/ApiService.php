@@ -17,6 +17,11 @@ use LaunchKey\SDK\Service\Exception\InvalidCredentialsError;
 use LaunchKey\SDK\Service\Exception\InvalidRequestError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
 
+/**
+ * Interface for interacting with the LaunchKey API
+ *
+ * @package LaunchKey\SDK\Service
+ */
 interface ApiService
 {
     /**

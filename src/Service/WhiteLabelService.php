@@ -7,6 +7,11 @@ namespace LaunchKey\SDK\Service;
 
 use LaunchKey\SDK\Domain\WhiteLabelUser;
 
+/**
+ * Interface for providing white label based services
+ *
+ * @package LaunchKey\SDK\Service
+ */
 interface WhiteLabelService
 {
     /**

@@ -10,6 +10,12 @@ namespace LaunchKey\SDK\Service;
 use LaunchKey\SDK\Cache\Cache;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Abstract ApiService implementation that provided the ability to retrieve public keys via API ping and using
+ * a Cache implementation to cache the keys.
+ *
+ * @package LaunchKey\SDK\Service
+ */
 abstract class PublicKeyCachingAbstractApiService implements ApiService
 {
     const CACHE_KEY_PUBLIC_KEY = "launchkey-public-key-cache";

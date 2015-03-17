@@ -9,6 +9,11 @@ namespace LaunchKey\SDK\EventDispatcher;
 
 use LaunchKey\SDK\Event\Event;
 
+/**
+ * Implementation of EventDispatcher that will process events locally and synchronously
+ *
+ * @package LaunchKey\SDK\EventDispatcher
+ */
 class SynchronousLocalEventDispatcher implements EventDispatcher
 {
     private $subscriptions = array();

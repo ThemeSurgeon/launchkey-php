@@ -9,7 +9,8 @@ namespace LaunchKey\SDK;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class Config
+ * Registry for configuring the LaunchKey SDK client
+ *
  * @package LaunchKey\SDK
  */
 class Config

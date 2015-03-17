@@ -10,7 +10,8 @@ namespace LaunchKey\SDK\Event;
 use LaunchKey\SDK\Domain\DeOrbitRequest;
 
 /**
- * Event dispatched after the SDK initiates a LaunchKey deorbit response
+ * Event dispatched after the SDK initiates a LaunchKey de-orbit response
+ *
  * @package LaunchKey\SDK\Event
  */
 class DeOrbitRequestEvent extends AbstractEvent

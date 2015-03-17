@@ -8,6 +8,7 @@ namespace LaunchKey\SDK\Cache;
 
 /**
  * Exception to be thrown when errors occur in interacting with the caching store
+ *
  * @package LaunchKey\SDK\Cache
  */
 class CacheError extends \Exception

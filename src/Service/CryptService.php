@@ -7,7 +7,8 @@
 namespace  LaunchKey\SDK\Service;;
 
 /**
- * Interface CryptService
+ * Interface for providing cryptography services
+ *
  * @package LaunchKey\SDK\Service
  */
 interface CryptService

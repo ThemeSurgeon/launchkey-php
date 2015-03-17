@@ -6,7 +6,11 @@
 
 namespace LaunchKey\SDK\Domain;
 
-
+/**
+ * Value object representing a de-orbit callback request from a server side event
+ *
+ * @package LaunchKey\SDK\Domain
+ */
 class DeOrbitCallback
 {
     /**

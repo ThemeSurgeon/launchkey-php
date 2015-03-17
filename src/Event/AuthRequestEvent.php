@@ -11,6 +11,7 @@ use LaunchKey\SDK\Domain\AuthRequest;
 
 /**
  * Event dispatched after the SDK initiates a LaunchKey authorization request
+ *
  * @package LaunchKey\SDK\Event
  */
 class AuthRequestEvent extends AbstractEvent

@@ -8,6 +8,7 @@ namespace LaunchKey\SDK\Event;
 
 /**
  * Interface for LaunchKey SDK events
+ *
  * @package LaunchKey\SDK\Event
  */
 interface Event

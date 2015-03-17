@@ -6,7 +6,11 @@
 
 namespace LaunchKey\SDK\Domain;
 
-
+/**
+ * Value object representing the response from a ping request
+ *
+ * @package LaunchKey\SDK\Domain
+ */
 class PingResponse
 {
     /**

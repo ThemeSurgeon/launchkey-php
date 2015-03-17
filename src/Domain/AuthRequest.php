@@ -7,7 +7,7 @@
 namespace LaunchKey\SDK\Domain;
 
 /**
- * Authorization request value object
+ * Value object representing an authentication/authorization request
  *
  * @package LaunchKey\SDK\Domain
  */

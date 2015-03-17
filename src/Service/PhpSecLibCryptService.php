@@ -9,6 +9,11 @@ namespace LaunchKey\SDK\Service;
 
 use Psr\Log\LoggerInterface;
 
+/**
+ * CryptService implementation utilizing phpseclib for cryptography
+ *
+ * @package LaunchKey\SDK\Service
+ */
 class PhpSecLibCryptService implements CryptService
 {
     /**

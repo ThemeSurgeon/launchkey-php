@@ -6,7 +6,11 @@
 
 namespace LaunchKey\SDK\Domain;
 
-
+/**
+ * Value object representing an authentication/authorization response
+ *
+ * @package LaunchKey\SDK\Domain
+ */
 class AuthResponse
 {
     /**

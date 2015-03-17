@@ -18,6 +18,11 @@ use LaunchKey\SDK\Event\DeOrbitRequestEvent;
 use LaunchKey\SDK\EventDispatcher\EventDispatcher;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Basic implementation of the AuthService interface providing event dispatching abd logging
+ *
+ * @package LaunchKey\SDK\Service
+ */
 class BasicAuthService implements AuthService
 {
 

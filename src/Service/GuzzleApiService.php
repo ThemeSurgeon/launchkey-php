@@ -29,6 +29,11 @@ use LaunchKey\SDK\Service\Exception\RateLimitExceededError;
 use LaunchKey\SDK\Service\Exception\UnknownCallbackActionError;
 use Psr\Log\LoggerInterface;
 
+/**
+ * ApiService implementation utilizing Guzzle3 as the HTTP client
+ *
+ * @package LaunchKey\SDK\Service
+ */
 class GuzzleApiService extends PublicKeyCachingAbstractApiService implements ApiService
 {
     const LAUNCHKEY_DATE_FORMAT = "Y-m-d H:i:s";
