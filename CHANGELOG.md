@@ -1,8 +1,6 @@
 CHANGELOG for LaunchKey PHP SDK
 ===============================
 
-CHANGELOG for LaunchKey Node SDK
-
 This changelog references the relevant changes (bug and security fixes) for the lifetime of the library.
 
 To get the diff for a specific change, go to https://github.com/LaunchKey/launchkey-node/commit/XXX where XXX is the
