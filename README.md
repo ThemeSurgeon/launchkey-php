@@ -121,7 +121,7 @@ to use user authorization.
 
 A ```\LaunchKey\SDK\Domain\AuthRequest``` object will be returned to identify
 the authorization request created for this authentication request.  The auth
-request ID is this object will be used to identify this in the LaunchKey Engine
+request ID in this object will be used to identify this in the LaunchKey Engine
 form this point forward.
 
 ## Determine if an authentication request is still authorized
@@ -164,7 +164,7 @@ When a user session, or orbit, was attained bu an authenticate request, a de-orb
 call is required to end that session, or de-orbit.
 
     ```php
-    $client->deOrbit("AuthRequestID");
+    $client->auth()->deOrbit("AuthRequestID");
 
     ```
 
@@ -177,7 +177,7 @@ request in an asynchronous fashion.  By processing the query string data receive
 by a POST call to the endpoint specified in the app configuration, this can be accomplished:
 
     ```php
-     $response = $client->handleCallback($_GET);
+     $response = $client->auth()->handleCallback($_GET);
 
      ```
 

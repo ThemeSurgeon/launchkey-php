@@ -2,7 +2,7 @@ HTTP/1.1 200 OK
 Server: nginx
 Date: Thu, 12 Mar 2015 16:55:12 GMT
 Content-Type: application/json; charset=UTF-8
-1Content-Length: 188
+Content-Length: 188
 Connection: close
 
 {"successful": true, "status_code": 201, "message": "", "message_code": 10220, "response": {"cipher": "Base64 Encrypted RSA Encrypted Cipher", "data": "Base64 Encoded AES Encrypted Data"}}
