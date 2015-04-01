@@ -8,6 +8,8 @@ change hash.  To quickly get the diff between two versions, you can use the GitH
 [https://github.com/LaunchKey/launchkey-php/compare/v0.1.0...v0.1.1](https://github.com/LaunchKey/launchkey-php/compare/v0.1.0...v0.1.1)
 shows the difference between the v0.1.0 and v0.1.1 tags.
 
+* 1.0.0-beta2
+    * Mitigate undefined index warning in poll call
 * 1.0.0-beta1
     * Fixed numerous typos
     * Remove LK Identifier from white label user as it is no longer used. 
