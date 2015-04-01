@@ -107,7 +107,7 @@ class AuthResponse
     }
 
     /**
-     * Get the user hash that identifies the user with the application
+     * Get the permanent and unique user hash that identifies the user.
      *
      * @return string
      */

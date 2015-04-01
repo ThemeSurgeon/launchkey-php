@@ -26,11 +26,10 @@ interface EventDispatcher
 
     /**
      * @param string $eventName Name of the event
-     * @param string|array|callable $callable Callable to be executed when the event is dispatched.  Two parameters, the
-     * event name and the Event object for the event will be passed to the callable in that order.  For more information
+     * @param string|array|callable $callable Callable to be executed when the event is dispatched.  For more information
      * on callables as related to your PHP version, @see http://php.net/manual/en/language.types.callable.php
-     * @param integer Priority of the callable for the event name.  Higher priority will executed before lower priority.
-     * callables with the same priority cannot be guaranteed to execute in the order in which they are added.
+     * @param integer $priority Priority of the callable for the event name.  Higher priority will executed before lower priority.
+     * Callables with the same priority cannot be guaranteed to execute in the order in which they are added.
      */
-    public function subscribe($eventName, $callable, $priority);
+    public function subscribe($eventName, $callable, $priority = 0);
 }
