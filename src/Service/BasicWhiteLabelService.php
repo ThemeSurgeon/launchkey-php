@@ -50,7 +50,9 @@ class BasicWhiteLabelService implements WhiteLabelService
     }
 
     /**
-     * @param string $identifier
+     * @param string $identifier Permanent and unique identifier of this user within your application.  This
+     * identifier will be used authenticate the user as well as pair devices additional devices to the user's account
+     * within your white label group.
      * @return WhiteLabelUser
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid

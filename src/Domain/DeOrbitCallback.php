@@ -19,15 +19,13 @@ class DeOrbitCallback
     private $deOrbitTime;
 
     /**
-     * @var string The user hash the requested the de-orbit.  Should be null, if the response was initiated by the
-     * LaunchKey SDK and not a LaunchKey engine callback.
+     * @var string The user hash for the user that requested the de-orbit.
      */
     private $userHash;
 
     /**
      * @param \DateTime|null $deOrbitTime When the de-orbit occurred.  Defaults to the current date/time.
-     * @param string|null $userHash The user hash the requested the de-orbit.  Should be null, if the response was
-     * initiated by the LaunchKey SDK and not a LaunchKey engine callback.
+     * @param string|null $userHash The user hash the requested the de-orbit.
      */
     public function __construct(\DateTime $deOrbitTime = null, $userHash = null)
     {
@@ -46,8 +44,7 @@ class DeOrbitCallback
     }
 
     /**
-     * Get the user hash the requested the de-orbit.  Should be null, if the response was
-     * initiated by the LaunchKey SDK and not a LaunchKey engine callback.
+     * Get the user hash for the user that requested the de-orbit.
      *
      * @return string
      */

@@ -72,10 +72,12 @@ If needed, you can have better control over the environment by using the Config 
 
 Using the config object allows you to set many other configuration items:
 
-* Private key password - if you RSA private key is password protected
+* Private Key Location - Specify the location of the private key file instead of loading it in yourself.
 
-* Cache - if you want to specify the cache implementation for public keys
-The default is local memory cache.
+* Private key password - if your RSA private key is password protected
+
+* Cache - The LaunchKey public key is cached to improve performance.  The default is local memory cache.  The config
+allows you to specify a different ```LaunchKey\SDK\Cache\Cache``` implementation.
 
 * Event Dispatcher - Events are dispatched by the SDK client.  The default
 Event Dispatcher is a local synchronous dispatcher.
@@ -83,13 +85,14 @@ Event Dispatcher is a local synchronous dispatcher.
 * Logger - Log debug and error messages with context utilizing a PSR compliant
 logger.  By default no logger is implemented.
 
-* API Base URL - For future use.
+* API Base URL - If you are using a premise based LaunchKey Engine or are psarticipating in a special preview test, you
+would specify the URL of the LaunchKey Engine API here. 
 
-* API Request Timeout - How long the cURL client will wait for the remote API
-to respond before timing out.
+* API Request Timeout - How long the cURL client will wait for the remote API to respond before timing out.  The
+default is 0 (infinite).
 
-* API Connect Timeout - How long the cURL client will allow for connecting the
- remote API before timing out.
+* API Connect Timeout - How long the cURL client will wait while connecting to the remote API before timing out.  The
+default is 0 (infinite).
 
 ## Request a user authentication
 
@@ -173,11 +176,11 @@ The de-orbit request has no return.
 ## Process a callback request
 
 Callback requests allow you to process changes in state of an authorization
-request in an asynchronous fashion.  By processing the query string data received
-by a POST call to the endpoint specified in the app configuration, this can be accomplished:
+request in an asynchronous fashion.  By processing the post data received
+by the endpoint specified in the app configuration, this can be accomplished:
 
     ```php
-     $response = $client->auth()->handleCallback($_GET);
+     $response = $client->auth()->handleCallback($_POST);
 
      ```
 
@@ -216,7 +219,8 @@ to configure the client for an application that belongs to the white label group
 
 Creating a white label user is accomplished by passing an identifier for your PHP application
 to the ```createUser``` method.  The identifier needs to be permanent and unique
-as this identifier will be used to pair devices within your white label mobile application.
+as this identifier will be used to identifiy the user within the LaunchKey Engine as well
+as pair additional devices with the white label user.
 
     ```php
     $whiteLabelUser = $client->whiteLabel()->createUser($identifier);

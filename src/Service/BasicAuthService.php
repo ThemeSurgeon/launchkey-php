@@ -96,7 +96,7 @@ class BasicAuthService implements AuthService
      * successfully authenticate to determine if the user has submitted a de-orbit request and authorization
      * for a session has been revoked.
      *
-     * @param string $authRequestId ID from the AuthResponse object returned from a previous authorize
+     * @param string $authRequestId authRequestId from the AuthResponse object returned from a previous authorize
      * or authenticate call.
      * @return AuthResponse
      * @throws CommunicationError If there was an error communicating with the endpoint
@@ -124,7 +124,7 @@ class BasicAuthService implements AuthService
      * application in order to update the LaunchKey or white label application of the status of the authenticated
      * session.
      *
-     * @param $authRequestId
+     * @param $authRequestId authRequestId from the AuthRequest object returned from a previous authorize
      * @return null
      * @throws CommunicationError If there was an error communicating with the endpoint
      * @throws InvalidCredentialsError If the credentials supplied to the endpoint were invalid

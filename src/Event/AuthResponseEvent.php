@@ -29,7 +29,7 @@ class AuthResponseEvent extends AbstractEvent
     }
 
     /**
-     * @return AuthResponseEvent
+     * @return AuthResponse
      */
     public function getAuthResponse()
     {

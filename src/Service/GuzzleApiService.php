@@ -247,7 +247,6 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
             throw new InvalidResponseError("Response data is not valid JSON when decrypted");
         }
         return new WhiteLabelUser(
-            $userData["lk_identifier"],
             $userData["qrcode"],
             $userData["code"]
         );

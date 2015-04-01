@@ -107,12 +107,6 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
     }
 
     /** @depends testReturnsWhiteLabelUserAsResponse */
-    public function testSetsIdentifierCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
-    {
-        $this->assertEquals($this->lkIdentifier, $user->getLaunchKeyIdentifier());
-    }
-
-    /** @depends testReturnsWhiteLabelUserAsResponse */
     public function testSetsQrCodeCorrectlyOnReturnedWhiteLabelUser(WhiteLabelUser $user)
     {
         $this->assertEquals($this->qrCodeUrl, $user->getQrCodeUrl());
@@ -168,7 +162,6 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
         $this->setFixtureResponse("api_responses/wl_user_create_ok.txt");
         \Phake::when($this->cryptService)
             ->decryptAES(\Phake::anyParameters())
-            ->thenReturn('{"lk_identifier": "' . $this->lkIdentifier .
-                '", "qrcode": "' . $this->qrCodeUrl . '", "code": "' . $this->code . '"}');
+            ->thenReturn('{"qrcode": "' . $this->qrCodeUrl . '", "code": "' . $this->code . '"}');
     }
 }
