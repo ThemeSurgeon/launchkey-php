@@ -171,7 +171,7 @@ class GuzzleApiService extends PublicKeyCachingAbstractApiService implements Api
                 true,
                 $auth["auth_request"],
                 $data["user_hash"],
-                $data["organization_user"],
+                isset($data["organization_user"]) ? $data["organization_user"] : null,
                 $data["user_push_id"],
                 $auth["device_id"],
                 $auth["response"] == "true"
