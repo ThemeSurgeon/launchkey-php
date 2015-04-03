@@ -10,8 +10,6 @@ use LaunchKey\SDK\Domain\WhiteLabelUser;
 
 class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstract
 {
-    private $lkIdentifier = 'LK Identifier';
-
     private $qrCodeUrl = 'QR Code URL';
 
     private $code = 'Code';
