@@ -218,9 +218,9 @@ There currently is no direct way to create users for a white label group, you wi
 to configure the client for an application that belongs to the white label group.
 
 Creating a white label user is accomplished by passing an identifier for your PHP application
-to the ```createUser``` method.  The identifier needs to be permanent and unique
-as this identifier will be used to identifiy the user within the LaunchKey Engine as well
-as pair additional devices with the white label user.
+to the ```createUser``` method.  The identifier needs to be a permanent and unique identifier
+of this user within your application. This identifier will be used authenticate the user as
+well as pair devices additional devices to the user's account within your white label group.
 
     ```php
     $whiteLabelUser = $client->whiteLabel()->createUser($identifier);
@@ -229,9 +229,6 @@ as pair additional devices with the white label user.
 
 The create user call returns a ```\LaunchKey\SDK\Domain\DeOrbitCallback``` object that
 contains:
-
-* LaunchKey Identifier - A unique identifier for the user within the white label group.  The
-value should be used to where a user hash would be used within the auth related calls.
 
 * QR Code URL - A URL to a QR code image that can be used to pair a device via a
 white label mobile application.
