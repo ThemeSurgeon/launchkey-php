@@ -14,7 +14,7 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
 
     private $code = 'Code';
 
-    public function testIsGetRequest()
+    public function testIsPostRequest()
     {
         $this->apiService->createWhiteLabelUser(null);
         $this->assertGuzzleRequestMethodEquals("POST");
@@ -151,6 +151,13 @@ class GuzzleApiServiceCreateWhiteLabelUserTest extends GuzzleApiServiceTestAbstr
             40421
         );
         $this->setFixtureResponse("api_responses/request_error.txt");
+        $this->apiService->createWhiteLabelUser(null);
+    }
+
+    public function testThrowsInvalidResponseWhenEncryptedDataIsNotJSON()
+    {
+        $this->setExpectedException('\LaunchKey\SDK\Service\Exception\InvalidResponseError');
+        \Phake::when($this->cryptService)->decryptAES(\Phake::anyParameters())->thenReturn('Invalid JSON');
         $this->apiService->createWhiteLabelUser(null);
     }
 

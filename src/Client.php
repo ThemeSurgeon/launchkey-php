@@ -6,6 +6,8 @@
 
 namespace LaunchKey\SDK;
 
+use LaunchKey\SDK\Service\WordPressApiService;
+
 /**
  * LaunchKey SDK Client
  *
@@ -120,6 +122,41 @@ class Client
         return new self($authService, $whiteLabelService, $eventDispatcher, $cache, $logger);
     }
 
+    public static function wpFactory($appKey, $secretKey = null, $privateKey = null, $sslVerify = true, Config $config = null)
+    {
+        $config = self::getUpdatedConfig($appKey, $secretKey, $privateKey, $config);
+        $cache = $config->getCache();
+        $logger = $config->getLogger();
+        $eventDispatcher = $config->getEventDispatcher();
+
+        $cryptService = new Service\PhpSecLibCryptService($config->getPrivateKey(), $config->getPrivateKeyPassword());
+        $apiService = self::getWpApiService(
+            $config->getAppKey(),
+            $config->getSecretKey(),
+            $config->getApiBaseUrl(),
+            $sslVerify,
+            $config->getApiRequestTimeout(),
+            $cryptService,
+            $cache,
+            $config->getPublicKeyTTL(),
+            $logger
+        );
+
+        $authService = new Service\BasicAuthService(
+            $apiService,
+            $eventDispatcher,
+            $logger
+        );
+        $whiteLabelService = new Service\BasicWhiteLabelService(
+            $apiService,
+            $eventDispatcher,
+            $logger
+        );
+
+        return new self($authService, $whiteLabelService, $eventDispatcher, $cache, $logger);
+
+    }
+
     /**
      * @param $appKey
      * @param $secretKey
@@ -200,6 +237,20 @@ class Client
             $logger
         );
         return $apiService;
+    }
+
+    private static function getWpApiService(
+        $appKey,
+        $secretKey,
+        $apiBaseUrl,
+        $sslVerify,
+        $apiRequestTimeout,
+        $cryptService,
+        $cache,
+        $publicKeyTTL,
+        $logger
+    ) {
+        return new WordPressApiService(new \WP_Http(), $cryptService, $cache, $publicKeyTTL, $appKey, $secretKey, $sslVerify, $apiBaseUrl, $apiRequestTimeout, $logger);
     }
 
     /**

@@ -61,7 +61,7 @@ class SynchronousLocalEventDispatcherTest extends \PHPUnit_Framework_TestCase
     {
         $this->eventDispatcher->subscribe("event-name", array($this->callable1, "callMe"), 10);
         $this->eventDispatcher->subscribe("event-name", array($this->callable2, "callMe"), 0);
-        Phake::when($this->callable1)->callMe(Phake::anyParameters())->thenGetReturnByLambda(function ($eventName, Event $event) {
+        Phake::when($this->callable1)->callMe(Phake::anyParameters())->thenReturnCallback(function ($eventName, Event $event) {
             $event->stopPropagation();
         });
         $this->eventDispatcher->dispatchEvent("event-name", $this->event);
