@@ -228,9 +228,10 @@ class GuzzleApiService extends AbstractApiService implements ApiService
         $key = substr($cipher, 0, strlen($cipher) - 16);
         $iv = substr($cipher, -16);
         $userJsonData = $this->cryptService->decryptAES($data["data"], $key, $iv);
-        $userData = $this->jsonDecodeData($userJsonData);
-        if (!$userData) {
-            throw new InvalidResponseError("Response data is not valid JSON when decrypted");
+        try {
+            $userData = $this->jsonDecodeData($userJsonData);
+        } catch (InvalidResponseError $e) {
+            throw new InvalidResponseError("Response data is not valid JSON when decrypted", $e->getCode(), $e);
         }
         return new WhiteLabelUser(
             $userData["qrcode"],
@@ -257,12 +258,12 @@ class GuzzleApiService extends AbstractApiService implements ApiService
             $response = $request->send();
             $this->debugLog("Response received", array("response" => $response->getMessage()));
         } catch (ClientErrorResponseException $e) {
-            $data = $this->jsonDecodeData($request->getResponse()->getBody());
             $message = $e->getMessage();
             $code = $e->getCode();
-            if ($data) {
+            try {
+                $data = $this->jsonDecodeData($request->getResponse()->getBody());
                 $this->throwExceptionForErrorResponse($data, $e);
-            } else {
+            } catch (InvalidResponseError $de) {
                 throw new InvalidRequestError($message, $code, $e);
             }
         } catch (ServerErrorResponseException $e) {

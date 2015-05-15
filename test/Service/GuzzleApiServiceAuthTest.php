@@ -13,19 +13,19 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
 {
     public function testAuthSendsPost()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         $this->assertGuzzleRequestMethodEquals('POST');
     }
 
     public function testAuthUSesCorrectPath()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         $this->assertGuzzleRequestPathEquals('/v1/auths');
     }
 
     public function testAuthSendsContentTypeFormUrlEncoded()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         $this->assertGuzzleRequestHeaderStartsWith("content-type", 'application/x-www-form-urlencoded');
     }
 
@@ -37,7 +37,7 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
 
     public function testAuthSendsEncryptedSecretKeyInFormData()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         $this->assertGuzzleRequestFormFieldValueEquals('secret_key', base64_encode("RSA Encrypted"));
     }
 
@@ -51,43 +51,43 @@ class GuzzleApiServiceAuthTest extends GuzzleApiServiceTestAbstract
 
     public function testAuthSendsSignatureInFormData()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         $this->assertGuzzleRequestFormFieldValueEquals('signature', "Signed");
     }
 
     public function testAuthSignsTheSecretKeyForTheSignature()
     {
-        $this->apiService->auth(null, null, null, null, null);
+        $this->apiService->auth(null, null);
         Phake::verify($this->cryptService)->sign("RSA Encrypted");
     }
 
     public function testAuthSendsUsernameInTheFormData()
     {
-        $this->apiService->auth("user name", null, null, null, null);
+        $this->apiService->auth("user name", null);
         $this->assertGuzzleRequestFormFieldValueEquals("username", "user name");
     }
 
     public function testAuthSendsNumericOneForSessionWhenTrue()
     {
-        $this->apiService->auth(null, true, null, null, null);
+        $this->apiService->auth(null, true);
         $this->assertGuzzleRequestFormFieldValueEquals("session", 1);
     }
 
     public function testAuthSendsNumericZeroForSessionWhenFalse()
     {
-        $this->apiService->auth(null, false, null, null, null);
+        $this->apiService->auth(null, false);
         $this->assertGuzzleRequestFormFieldValueEquals("session", 0);
     }
 
     public function testAuthSendsNumericOneForUserPushId()
     {
-        $this->apiService->auth(null, true, null, null, null);
+        $this->apiService->auth(null, true);
         $this->assertGuzzleRequestFormFieldValueEquals("user_push_id", 1);
     }
 
     public function testAuthReturnsAuthRequestObject()
     {
-        $response = $this->apiService->auth(null, null, null, null, null);
+        $response = $this->apiService->auth(null, null);
         $this->assertInstanceOf('LaunchKey\SDK\Domain\AuthRequest', $response);
         return $response;
     }

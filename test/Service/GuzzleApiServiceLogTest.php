@@ -38,6 +38,14 @@ class GuzzleApiServiceLogTest extends GuzzleApiServiceTestAbstract
         $this->assertGuzzleRequestFormFieldValueEquals("secret_key", base64_encode($this->rsaEncrypted));
     }
 
+    public function testLogUsesSecretKeyAndCurrentTimeInLaunchKeyTimeFormatForEncryptedSecretKey()
+    {
+        $before = new \DateTime();
+        $this->apiService->log(null, null, null);
+        $after = new \DateTime();
+        $this->assertLastItemRsaEncryptedWasValidSecretKey($before, $after);
+    }
+
     public function testLogSendsSignatureInFormData()
     {
         $this->apiService->log(null, null, null);

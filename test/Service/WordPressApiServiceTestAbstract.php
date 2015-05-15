@@ -8,10 +8,16 @@ namespace LaunchKey\SDK\Test\Service;
 
 
 use LaunchKey\SDK\Service\WordPressApiService;
+use Phake;
 
 abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCase
 {
-	/**
+    /**
+     * @var array
+     */
+    public $response;
+
+    /**
      * @Mock
 	 * @var \WP_Http
 	 */
@@ -35,11 +41,6 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
     protected $publicKeyTTL = 999;
 
     /**
-     * @var WordPressApiService
-     */
-    protected $apiService;
-
-    /**
      * @var int
      */
     protected $appKey = 1234567890;
@@ -47,7 +48,7 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
     /**
      * @var string
      */
-    protected $secretKey = 'super_secret_key';
+    protected $secretKey = 'Secret Key';
 
     /**
      * @var bool
@@ -58,6 +59,21 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
      * @var int
      */
     protected $requestTimeout = 99;
+
+    /**
+     * @var string
+     */
+    protected $rsaEncrypted = "RSA Encrypted";
+
+    /**
+     * @var string
+     */
+    protected $signed = "Signed";
+
+    /**
+     * @var string
+     */
+    protected $publicKey = "Public Key";
 
     /**
      * @Mock
@@ -76,9 +92,27 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
      */
     private $apiBaseUrl = 'https://api.base.url';
 
+    /**
+     * @var WordPressApiService
+     */
+    protected $apiService;
+
+    /**
+     * @var WordPressApiService
+     */
+    protected $loggingApiService;
+
     protected function setUp() {
-        \Phake::initAnnotations($this);
-        \Phake::when($this->wpError)->get_error_messages()->thenReturn(array('error', 'messages'));
+        Phake::initAnnotations($this);
+        Phake::when($this->wpError)->get_error_messages()->thenReturn(array('error', 'messages'));
+        Phake::when($this->cryptService)->encryptRSA(Phake::anyParameters())->thenReturn($this->rsaEncrypted);
+        Phake::when($this->cryptService)->sign(Phake::anyParameters())->thenReturn($this->signed);
+        Phake::when($this->cache)->get(WordPressApiService::CACHE_KEY_PUBLIC_KEY)->thenReturn($this->publicKey);
+        $that = $this;
+        phake::when($this->client)->request(Phake::anyParameters())->thenReturnCallback(function () use ($that) {
+            return $that->response;
+        });
+
         $this->apiService = new WordPressApiService(
             $this->client,
             $this->cryptService,
@@ -114,8 +148,13 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
         $this->sslverify = null;
         $this->apiBaseUrl = null;
         $this->requestTimeout = null;
+        $this->rsaEncrypted = null;
+        $this->signed = null;
+        $this->publicKey = null;
         $this->logger = null;
-		$this->apiService = null;
+        $this->apiService = null;
+        $this->loggingApiService = null;
+        $this->wpError = null;
 	}
 
     abstract function testCallsRequest();
@@ -154,5 +193,31 @@ abstract class WordPressApiServiceTestAbstract extends \PHPUnit_Framework_TestCa
     public function testRequestSslVerify(array $options)
     {
         $this->assertEquals($this->sslverify, $options['sslverify']);
+    }
+
+    /**
+     * Verify that the last item the was RSA encrypted was a valid secret key.  Date times are provided
+     * in order to verify the correct "LaunchKey Time" was used for the stamped attribute.
+     * @param \DateTime $before
+     * @param \DateTime $after
+     */
+    protected function assertLastItemRsaEncryptedWasValidSecretKey(\DateTime $before, \DateTime $after) {
+        $tz = new \DateTimeZone("UTC");
+        $before = $before->setTimezone($tz);
+        $after = $after->setTimezone($tz);
+        $json = $publicKey = null;
+        Phake::verify($this->cryptService)->encryptRSA(Phake::capture($json), Phake::capture($publicKey), false);
+        $this->assertEquals($this->publicKey, $publicKey, "Unexpected value used for public key in encryptRSA");
+        $this->assertJson($json, "Data passed to encryptRSA for secret_key was not valid JSON");
+        $data = json_decode($json, true);
+        $this->assertArrayHasKey("secret", $data, "Encrypted secret has no secret attribute");
+        $this->assertEquals($this->secretKey, $data["secret"], "Unexpected value for secret_key secret");
+        $this->assertArrayHasKey("stamped", $data, "Encrypted secret has no stamped attribute");
+        $this->assertStringMatchesFormat(
+            '%d-%d-%d %d:%d:%d', $data['stamped'], "secret_key stamped attribute has incorrect format"
+        );
+        $actual = \DateTime::createFromFormat("Y-m-d H:i:s", $data['stamped'], $tz);
+        $this->assertGreaterThanOrEqual($before, $actual, "secret_key stamped is before the call occurred");
+        $this->assertLessThanOrEqual($after, $actual, "secret_key stamped is before the call occurred");
     }
 }

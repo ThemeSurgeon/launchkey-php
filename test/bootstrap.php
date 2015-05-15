@@ -6,7 +6,7 @@
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
 if (!class_exists('WP_Http')) {
-	interface WP_Http {
+	class WP_Http {
 		/**
 		 * @param string       $url  The request URL.
 		 * @param string|array $args {
@@ -52,7 +52,7 @@ if (!class_exists('WP_Http')) {
 		 * @return array|WP_Error Array containing 'headers', 'body', 'response', 'cookies', 'filename'.
 		 *                        A WP_Error instance upon error.
 		 */
-        function request($url, $args = array());
+        function request($url, $args = array()) {}
 	}
 }
 

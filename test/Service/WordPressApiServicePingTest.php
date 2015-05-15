@@ -34,10 +34,6 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
             'cookies' => array(),
             'filename' => null
         );
-        $that = $this;
-        phake::when($this->client)->request(Phake::anyParameters())->thenReturnCallback(function () use (&$that) {
-            return $that->response;
-        });
     }
 
     public function testCallsRequest()
@@ -65,6 +61,26 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
         $this->assertEquals('GET', $options['method']);
     }
 
+    /**
+     * @depends testCallsRequest
+     * @param array $options
+     */
+    public function testRequestSendsHeaders(array $options)
+    {
+        $this->assertArrayHasKey('headers', $options);
+        return $options['headers'];
+    }
+
+    /**
+     * @depends testRequestSendsHeaders
+     * @param array $headers
+     */
+    public function testRequestAcceptIsApplicationJson(array $headers)
+    {
+        $this->assertArrayHasKey('Accept', $headers);
+        $this->assertEquals('application/json', $headers['Accept']);
+    }
+
     public function testReturnsPingResponse()
     {
         $response = $this->apiService->ping();
@@ -87,9 +103,8 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
      * @depends testReturnsPingResponse
      * @param PingResponse $response
      */
-    public function testPutsKeyTimeStampFromResponseInThePingResponseWithUTC()
+    public function testPutsKeyTimeStampFromResponseInThePingResponseWithUTC(PingResponse $response)
     {
-        $response = $this->apiService->ping();
         $expected = new \DateTime("2013-04-20 21:40:02", new \DateTimeZone("UTC"));
         $this->assertEquals($expected, $response->getKeyTimeStamp());
     }
@@ -98,16 +113,14 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
      * @depends testReturnsPingResponse
      * @param PingResponse $response
      */
-    public function testPutsKeyFromResponseInThePingResponse()
+    public function testPutsKeyFromResponseInThePingResponse(PingResponse $response)
     {
         $expected = "-----BEGIN PUBLIC KEY-----\n\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8zQos4iDSjmUVrFUAg5G\nuhU6GehNKb8MCXFadRWiyLGjtbGZAk8fusQU0Uj9E3o0mne0SYESACkhyK+3M1Er\nbHlwYJHN0PZHtpaPWqsRmNzui8PvPmhm9QduF4KBFsWu1sBw0ibBYsLrua67F/wK\nPaagZRnUgrbRUhQuYt+53kQNH9nLkwG2aMVPxhxcLJYPzQCat6VjhHOX0bgiNt1i\nHRHU2phxBcquOW2HpGSWcpzlYgFEhPPQFAxoDUBYZI3lfRj49gBhGQi32qQ1YiWp\naFxOB8GA0Ny5SfI67u6w9Nz9Z9cBhcZBfJKdq5uRWjZWslHjBN3emTAKBpAUPNET\nnwIDAQAB\n\n-----END PUBLIC KEY-----\n";
-        $response = $this->apiService->ping();
         $this->assertEquals($expected, $response->getPublicKey());
     }
 
     /**
-     * @depends testReturnsPingResponse
-     * @param PingResponse $response
+     * @depends testCallsRequest
      */
     public function testThrowsInvalidResponseErrorWhenBodyIsNotParseable()
     {
@@ -117,8 +130,7 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
     }
 
     /**
-     * @depends testReturnsPingResponse
-     * @param PingResponse $response
+     * @depends testCallsRequest
      */
     public function testDebugLogsWhenLoggerIsPresent()
     {
@@ -127,9 +139,8 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
     }
 
     /**
-     * @depends testReturnsPingResponse
-     * @param PingResponse $response
-     */
+     * @depends testCallsRequest
+    */
     public function testThrowsCommunicationErrorOnServerError()
     {
         $this->setExpectedException(
@@ -140,6 +151,9 @@ class WordPressApiServicePingTest extends WordPressApiServiceTestAbstract
         $this->apiService->ping();
     }
 
+    /**
+     * @depends testCallsRequest
+     */
     public function testThrowsInvalidRequestOn400()
     {
         $this->setExpectedException(
