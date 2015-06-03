@@ -250,6 +250,7 @@ class Client
         $publicKeyTTL,
         $logger
     ) {
+        $apiRequestTimeout = $apiRequestTimeout ?: 3600; // Fix for streams timing out when timeout is 0 and thought to be infinite
         return new WordPressApiService(new \WP_Http(), $cryptService, $cache, $publicKeyTTL, $appKey, $secretKey, $sslVerify, $apiBaseUrl, $apiRequestTimeout, $logger);
     }
 
