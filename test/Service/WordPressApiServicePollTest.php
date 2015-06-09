@@ -106,6 +106,16 @@ class WordPressApiServicePollTest extends WordPressApiServiceTestAbstract
     }
 
     /**
+     * @depends testRequestSendsHeaders
+     * @param array $headers
+     */
+    public function testRequestConnectionIsClose(array $headers)
+    {
+        $this->assertArrayHasKey('Connection', $headers);
+        $this->assertEquals('close', $headers['Connection']);
+    }
+
+    /**
      * @depends testCallsRequest
      * @param array $options
      * @return array

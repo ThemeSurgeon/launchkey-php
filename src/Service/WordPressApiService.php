@@ -287,7 +287,20 @@ class WordPressApiService extends AbstractApiService implements ApiService
         array $parameters = array(),
         $contentType = 'application/x-www-form-urlencoded'
     ) {
-        $headers = array('Accept' => 'application/json');
+        $headers = array(
+            'Accept' => 'application/json',
+            /**
+             * "Connection: close" header must be set for performance issues with thh WP_Http_Streams provider.
+             *
+             * The WP_Http_Streams provider waits for the connection to close to determine that it has received all
+             * of the data from the server.  If the server does not close the connection, the stream context will wait
+             * for the request to time out which is not optimal.  This issue was identified by WordPress in bug ticket
+             * #23463 and resolved in WordPress 3.7.0.  The work-around is specifically im place for WordPress < 3.7.0
+             *
+             * @link https://core.trac.wordpress.org/ticket/23463
+             */
+            'Connection' => 'close'
+        );
 
         if (!empty($data)) {
             $headers['Content-Type'] = $contentType;
